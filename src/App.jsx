@@ -677,12 +677,13 @@ export default function App() {
                                         <div className="relative md:col-span-2">
                                             <input 
                                                 type="date" 
+                                                id="newRaceDate"
                                                 value={newRaceDate} 
                                                 onChange={(e) => setNewRaceDate(e.target.value)} 
-                                                className={`w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 
-                                                            ${!newRaceDate ? 'text-slate-400' : 'text-slate-800 dark:text-white'}`}
+                                                className="appearance-none block px-4 py-2.5 w-full text-sm text-slate-800 dark:text-white bg-slate-100 dark:bg-gray-700 rounded-lg border border-slate-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 peer"
+                                                placeholder=" "
                                             />
-                                            {!newRaceDate && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">Date</span>}
+                                            <label htmlFor="newRaceDate" className="absolute text-sm text-slate-400 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] start-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Date</label>
                                         </div>
 
                                        <div className="relative md:col-span-6">
@@ -749,15 +750,16 @@ export default function App() {
                                             <input type="text" placeholder="Goal Time" value={newUpcomingRace.goalTime} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, goalTime: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                          </div>
                                          
-                                         <div className="relative md:col-span-2">
+                                        <div className="relative md:col-span-2">
                                             <input 
                                                 type="date" 
+                                                id="newUpcomingRaceDate"
                                                 value={newUpcomingRace.date} 
                                                 onChange={(e) => setNewUpcomingRace({...newUpcomingRace, date: e.target.value})}
-                                                className={`w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500
-                                                            ${!newUpcomingRace.date ? 'text-slate-400' : 'text-slate-800 dark:text-white'}`}
+                                                className="appearance-none block px-4 py-2.5 w-full text-sm text-slate-800 dark:text-white bg-slate-100 dark:bg-gray-700 rounded-lg border border-slate-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 peer"
+                                                placeholder=" "
                                             />
-                                            {!newUpcomingRace.date && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">Date</span>}
+                                            <label htmlFor="newUpcomingRaceDate" className="absolute text-sm text-slate-400 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] start-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Date</label>
                                         </div>
                                          
                                          <div className="relative md:col-span-6">
@@ -781,7 +783,7 @@ export default function App() {
                                                     )}
                                                     {editingUpcomingRaceId === race.id ? (
                                                         <div className="p-4 space-y-3">
-                                                            <input type="text" value={editingUpcomingRaceData.name} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, name: e.target.value})} className="w-full bg-white dark:bg-gray-600 p-2 rounded border-slate-300 dark:border-gray-500"/>
+                                                            <input type="text" value={editingUpcomingRaceData.name} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, name: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                                             <div className="grid grid-cols-6 gap-4">
                                                                 <div className={`col-span-2 grid gap-4 ${showCustomEditDistance ? 'grid-cols-2' : 'grid-cols-1'}`}>
                                                                     <select value={showCustomEditDistance ? 'Custom' : editingUpcomingRaceData.distance} 
@@ -790,29 +792,32 @@ export default function App() {
                                                                             setShowCustomEditDistance(val === 'Custom');
                                                                             setEditingUpcomingRaceData({...editingUpcomingRaceData, distance: val === 'Custom' ? '' : val});
                                                                         }}
-                                                                        className="w-full bg-white dark:bg-gray-600 p-2 rounded border-slate-300 dark:border-gray-500">
+                                                                        className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                                                         {STANDARD_DISTANCES.map(d => <option key={d} value={d}>{d}</option>)}
                                                                         <option value="Custom">Custom</option>
                                                                     </select>
-                                                                    {showCustomEditDistance && <input type="text" value={editingUpcomingRaceData.distance} onChange={e => setEditingUpcomingRaceData({...editingUpcomingRaceData, distance: e.target.value})} placeholder="Custom" className="w-full bg-white dark:bg-gray-600 p-2 rounded border-slate-300 dark:border-gray-500"/>}
+                                                                    {showCustomEditDistance && <input type="text" value={editingUpcomingRaceData.distance} onChange={e => setEditingUpcomingRaceData({...editingUpcomingRaceData, distance: e.target.value})} placeholder="Custom" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>}
                                                                 </div>
-                                                                <input type="text" value={editingUpcomingRaceData.goalTime} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, goalTime: e.target.value})} placeholder="Goal Time" className="col-span-2 w-full bg-white dark:bg-gray-600 p-2 rounded border-slate-300 dark:border-gray-500"/>
+                                                                <div className="col-span-2">
+                                                                    <input type="text" value={editingUpcomingRaceData.goalTime} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, goalTime: e.target.value})} placeholder="Goal Time" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                                                </div>
                                                                 <div className="relative col-span-2">
                                                                     <input 
-                                                                        type="date" 
+                                                                        type="date"
+                                                                        id="editingDate" 
                                                                         value={editingUpcomingRaceData.date} 
                                                                         onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, date: e.target.value})} 
-                                                                        className={`w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 p-2.5 px-4 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500
-                                                                                    ${!editingUpcomingRaceData.date ? 'text-slate-400' : 'dark:text-white'}`}
+                                                                        className="appearance-none block w-full px-4 py-2.5 text-sm bg-slate-100 dark:bg-gray-700 text-slate-800 dark:text-white rounded-lg border border-slate-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 peer"
+                                                                        placeholder=" "
                                                                     />
-                                                                    {!editingUpcomingRaceData.date && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">Date</span>}
+                                                                     <label htmlFor="editingDate" className="absolute text-sm text-slate-400 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] start-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Date</label>
                                                                 </div>
                                                             </div>
                                                             <div className="relative">
                                                                 <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
-                                                                <input type="url" placeholder="Race Website Link (Optional)" value={editingUpcomingRaceData.link} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, link: e.target.value})} className="w-full bg-white dark:bg-gray-600 p-2 rounded border-slate-300 dark:border-gray-500 pl-10"/>
+                                                                <input type="url" placeholder="Race Website Link (Optional)" value={editingUpcomingRaceData.link} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, link: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
                                                             </div>
-                                                            <textarea value={editingUpcomingRaceData.info} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, info: e.target.value})} className="w-full bg-white dark:bg-gray-600 p-2 rounded h-20 border-slate-300 dark:border-gray-500"/>
+                                                            <textarea value={editingUpcomingRaceData.info} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, info: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 h-20 resize-none"/>
                                                             <div className="flex justify-end gap-2">
                                                                 <button onClick={() => handleSaveUpcomingRace(race.id)} className="p-2 rounded-full text-white bg-green-500 hover:bg-green-600"><Save size={18}/></button>
                                                                 <button onClick={() => setEditingUpcomingRaceId(null)} className="p-2 rounded-full text-slate-600 bg-slate-200 hover:bg-slate-300"><X size={18}/></button>
