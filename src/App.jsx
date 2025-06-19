@@ -43,6 +43,8 @@ const appId = 'benedict-runs-default';
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+// --- DIAGNOSTIC LOG ---
+console.log(`Connecting to Firebase project: ${firebaseConfig.projectId} with appId: ${appId}`);
 setLogLevel('debug');
 
 // --- Helper Function to convert time string to seconds ---
@@ -180,15 +182,20 @@ export default function App() {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
+                // --- DIAGNOSTIC LOG ---
+                console.log(`Auth state changed. User FOUND with UID: ${user.uid}`);
                 setCurrentUser(user);
                 const userDocRef = doc(db, `artifacts/${appId}/users/${user.uid}/profile`, "data");
                 const userDocSnap = await getDoc(userDocRef);
                 if (userDocSnap.exists()) {
                     setUserProfile(userDocSnap.data());
                 } else {
+                     console.log(`User profile not found for UID: ${user.uid}. Creating a default one.`);
                      setUserProfile({ name: 'Runner', username: 'Runner' });
                 }
             } else {
+                // --- DIAGNOSTIC LOG ---
+                console.log("Auth state changed. User NOT found (logged out).");
                 setCurrentUser(null);
                 setUserProfile(null);
                 setCompletedRaces([]);
@@ -252,12 +259,16 @@ export default function App() {
     // --- Firestore Real-time Listeners ---
     useEffect(() => {
         if (currentUser) {
-            const completedRacesRef = collection(db, `artifacts/${appId}/users/${currentUser.uid}/completedRaces`);
+            const path = `artifacts/${appId}/users/${currentUser.uid}/completedRaces`;
+            // --- DIAGNOSTIC LOG ---
+            console.log(`Listening for completed races at path: ${path}`);
+            const completedRacesRef = collection(db, path);
             const q = query(completedRacesRef, orderBy('date', 'desc'));
             
             const unsubscribe = onSnapshot(q, (snapshot) => {
                 const races = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
                 setCompletedRaces(races);
+                console.log(`Successfully fetched ${races.length} completed races.`);
             }, (error) => {
                 console.error("Error fetching completed races:", error);
                 showAndHideNotification("Could not load race history.");
@@ -269,12 +280,16 @@ export default function App() {
 
     useEffect(() => {
         if (currentUser) {
-            const upcomingRacesRef = collection(db, `artifacts/${appId}/users/${currentUser.uid}/upcomingRaces`);
+            const path = `artifacts/${appId}/users/${currentUser.uid}/upcomingRaces`;
+            // --- DIAGNOSTIC LOG ---
+            console.log(`Listening for upcoming races at path: ${path}`);
+            const upcomingRacesRef = collection(db, path);
             const q = query(upcomingRacesRef, orderBy('date', 'asc'));
             
             const unsubscribe = onSnapshot(q, (snapshot) => {
                 const races = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
                 setUpcomingRaces(races);
+                console.log(`Successfully fetched ${races.length} upcoming races.`);
             }, (error) => {
                 console.error("Error fetching upcoming races:", error);
                 showAndHideNotification("Could not load upcoming races.");
