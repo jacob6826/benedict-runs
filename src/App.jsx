@@ -894,8 +894,11 @@ function PersonalRecords({ records }) {
 function Stats({ completedRaces }) {
     const [selectedYear, setSelectedYear] = useState('All');
     const [openDistance, setOpenDistance] = useState(null);
+    const [isExpanded, setIsExpanded] = useState(false);
 
-    const handleToggle = (distance) => {
+    const toggleExpansion = () => setIsExpanded(prev => !prev);
+
+    const handleToggleAccordion = (distance) => {
         setOpenDistance(prev => prev === distance ? null : distance);
     };
 
@@ -973,10 +976,12 @@ function Stats({ completedRaces }) {
 
     return (
         <section className="bg-white dark:bg-gray-800/50 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-gray-700 mt-10">
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold flex items-center">
-                    <BarChart2 className="mr-3 text-indigo-500 dark:text-indigo-400" />Stats
-                </h2>
+            <div className="flex justify-between items-center">
+                 <button onClick={toggleExpansion} className="flex items-center gap-3 text-2xl font-bold p-2 -m-2 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-700/50">
+                    <BarChart2 className="text-indigo-500 dark:text-indigo-400" />
+                    <span>Stats</span>
+                    <ChevronDown className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} size={24} />
+                </button>
                 <select 
                     value={selectedYear} 
                     onChange={(e) => setSelectedYear(e.target.value)}
@@ -987,89 +992,96 @@ function Stats({ completedRaces }) {
                 </select>
             </div>
 
-            {yearStats.totalRaces > 0 ? (
-                <>
-                    <div className="grid grid-cols-2 gap-4 mb-8">
-                         <div className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center">
-                            <div className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                                <Flag size={16} />
-                                <span>Total Races</span>
-                            </div>
-                            <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">{yearStats.totalRaces}</p>
-                        </div>
-                         <div className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center">
-                            <div className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                                <Milestone size={16} />
-                                <span>Total Miles</span>
-                            </div>
-                            <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">{yearStats.totalMiles}</p>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {/* Left Column: Accordion List */}
-                        <div className="space-y-2">
-                            {yearStats.racesByDistance.map(([distance, races]) => (
-                                <div key={distance} className="border-b border-slate-200 dark:border-gray-700 last:border-b-0">
-                                    <button onClick={() => handleToggle(distance)} className="w-full flex justify-between items-center p-3 hover:bg-slate-50 dark:hover:bg-gray-700/50 rounded-lg">
-                                        <span className="font-bold">{distance}</span>
-                                        <div className="flex items-center gap-4">
-                                            <span className="text-sm text-slate-500 dark:text-slate-400">{races.length} race{races.length > 1 ? 's' : ''}</span>
-                                            <ChevronDown className={`transform transition-transform duration-200 ${openDistance === distance ? 'rotate-180' : ''}`} size={20} />
-                                        </div>
-                                    </button>
-                                    {openDistance === distance && (
-                                        <ul className="pl-4 pr-2 py-2 space-y-2">
-                                            {races.map(race => (
-                                                <li key={race.id} className="flex justify-between items-center text-sm p-2 bg-slate-100 dark:bg-gray-700 rounded-md">
-                                                    <div>
-                                                        <p className="font-semibold">{race.name}</p>
-                                                        <p className="text-xs text-slate-400">{new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <p className="font-mono">{race.time}</p>
-                                                        <p className="font-mono text-xs text-slate-400">{formatPace(race.time, race.distance)}/mi</p>
-                                                    </div>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                        
-                        {/* Right Column: Year Best Grid */}
-                        <div>
-                            <h3 className="font-bold mb-3 text-lg text-center">Best Times in {selectedYear === 'All' ? 'All Time' : selectedYear}</h3>
-                            <div className="grid grid-cols-2 gap-4">
-                                {STANDARD_DISTANCES.map(distance => {
-                                    const record = yearStats.distanceStats[distance];
-                                    return (
-                                    <div key={distance} className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center flex flex-col justify-between">
-                                        <div>
-                                            <h4 className="font-bold text-indigo-600 dark:text-indigo-400">{distance}</h4>
-                                            <p className="text-2xl font-semibold mt-2">{record.bestTime}</p>
-                                            {record.bestTime !== 'N/A' && (
-                                                <p className="text-slate-500 dark:text-slate-400 text-sm">
-                                                    {formatPace(record.bestTime, record.distance)} / mi
-                                                </p>
-                                            )}
-                                        </div>
-                                        <div className="h-7 mt-2">
-                                            {record.improvement && (
-                                                <div className="flex items-center justify-center gap-1 text-sm text-green-500">
-                                                    <TrendingDown size={14} />
-                                                    <span className="font-semibold">Improvement: -{record.improvement}</span>
-                                                </div>
-                                            )}
-                                        </div>
+            {isExpanded && (
+                <div className="mt-6">
+                    {yearStats.totalRaces > 0 ? (
+                        <>
+                            <div className="grid grid-cols-2 gap-4 mb-8">
+                                 <div className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center">
+                                    <div className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                                        <Flag size={16} />
+                                        <span>Total Races</span>
                                     </div>
-                                )})}
+                                    <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">{yearStats.totalRaces}</p>
+                                </div>
+                                 <div className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center">
+                                    <div className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                                        <Milestone size={16} />
+                                        <span>Total Miles</span>
+                                    </div>
+                                    <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">{yearStats.totalMiles}</p>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                </>
-            ) : (
-                <p className="text-slate-400 dark:text-slate-500 text-center py-8">No races completed in {selectedYear}.</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {/* Left Column: Accordion List */}
+                                <div className="space-y-2">
+                                    {yearStats.racesByDistance.map(([distance, races]) => (
+                                        <div key={distance} className="border-b border-slate-200 dark:border-gray-700 last:border-b-0">
+                                            <button onClick={() => handleToggleAccordion(distance)} className="w-full flex justify-between items-center p-3 hover:bg-slate-50 dark:hover:bg-gray-700/50 rounded-lg">
+                                                <span className="font-bold">{distance}</span>
+                                                <div className="flex items-center gap-4">
+                                                    <span className="text-sm text-slate-500 dark:text-slate-400">{races.length} race{races.length > 1 ? 's' : ''}</span>
+                                                    <ChevronDown className={`transform transition-transform duration-200 ${openDistance === distance ? 'rotate-180' : ''}`} size={20} />
+                                                </div>
+                                            </button>
+                                            {openDistance === distance && (
+                                                <ul className="pl-4 pr-2 py-2 space-y-2">
+                                                    {races.map(race => (
+                                                        <li key={race.id} className="flex justify-between items-center text-sm p-2 bg-slate-100 dark:bg-gray-700 rounded-md">
+                                                            <div>
+                                                                <p className="font-semibold">{race.name}</p>
+                                                                <p className="text-xs text-slate-400">{new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <p className="font-mono">{race.time}</p>
+                                                                <p className="font-mono text-xs text-slate-400">{formatPace(race.time, race.distance)}/mi</p>
+                                                            </div>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                                
+                                {/* Right Column: Year Best Grid */}
+                                <div>
+                                    <h3 className="font-bold mb-3 text-lg text-center">Best Times in {selectedYear === 'All' ? 'All Time' : selectedYear}</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {STANDARD_DISTANCES.map(distance => {
+                                            const record = yearStats.distanceStats[distance];
+                                            return (
+                                            <div key={distance} className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center flex flex-col justify-between">
+                                                <div>
+                                                    <h4 className="font-bold text-indigo-600 dark:text-indigo-400">{distance}</h4>
+                                                    <p className="text-2xl font-semibold mt-2">{record.bestTime}</p>
+                                                    {record.bestTime !== 'N/A' && (
+                                                        <p className="text-slate-500 dark:text-slate-400 text-sm">
+                                                            {formatPace(record.bestTime, record.distance)} / mi
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <div className="h-7 mt-2 flex flex-col justify-center">
+                                                    {record.improvement && (
+                                                        <div className="flex items-center justify-center gap-1 text-xs">
+                                                            <span className="text-slate-500 dark:text-slate-400">Improvement:</span>
+                                                            <span className="font-semibold text-green-500 flex items-center gap-1">
+                                                                <TrendingDown size={14} />
+                                                                {record.improvement}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )})}
+                                    </div>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <p className="text-slate-400 dark:text-slate-500 text-center py-8">No races completed in {selectedYear}.</p>
+                    )}
+                </div>
             )}
         </section>
     );
@@ -1334,4 +1346,4 @@ function UpdateInfoModal({ userProfile, onClose, onUpdate }) {
             </form>
         </div>
     );
-}
+} 
