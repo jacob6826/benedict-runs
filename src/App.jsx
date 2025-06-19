@@ -949,21 +949,21 @@ function SignUpModal({ onClose, onSwitch }) {
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md m-4">
-                <h2 className="text-2xl font-bold mb-4">Create Account</h2>
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-md m-4">
+                <h2 className="text-2xl font-bold mb-4 dark:text-slate-100">Create Account</h2>
                 {error && <p className="bg-red-100 text-red-700 p-3 rounded-lg mb-4">{error}</p>}
                 <form onSubmit={handleSignUp} className="space-y-4">
-                    <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Your Name" required className="w-full bg-slate-100 p-3 rounded-lg border-slate-300"/>
-                    <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="Username" required className="w-full bg-slate-100 p-3 rounded-lg border-slate-300"/>
-                    <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password (min. 6 characters)" required className="w-full bg-slate-100 p-3 rounded-lg border-slate-300"/>
-                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email (Optional, for backup)" className="w-full bg-slate-100 p-3 rounded-lg border-slate-300"/>
+                    <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Your Name" required className="w-full bg-slate-100 dark:bg-gray-700 dark:text-white dark:placeholder-slate-400 dark:border-gray-600 p-3 rounded-lg border-slate-300"/>
+                    <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="Username" required className="w-full bg-slate-100 dark:bg-gray-700 dark:text-white dark:placeholder-slate-400 dark:border-gray-600 p-3 rounded-lg border-slate-300"/>
+                    <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password (min. 6 characters)" required className="w-full bg-slate-100 dark:bg-gray-700 dark:text-white dark:placeholder-slate-400 dark:border-gray-600 p-3 rounded-lg border-slate-300"/>
+                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email (Optional, for backup)" className="w-full bg-slate-100 dark:bg-gray-700 dark:text-white dark:placeholder-slate-400 dark:border-gray-600 p-3 rounded-lg border-slate-300"/>
                     <div className="flex justify-between items-center gap-4">
                         <button type="submit" disabled={loading} className="w-full bg-indigo-600 text-white p-3 rounded-lg font-bold hover:bg-indigo-700 disabled:bg-indigo-300">{loading ? 'Creating...' : 'Sign Up'}</button>
-                        <button type="button" onClick={onClose} className="w-full bg-slate-200 text-slate-700 p-3 rounded-lg font-bold hover:bg-slate-300">Cancel</button>
+                        <button type="button" onClick={onClose} className="w-full bg-slate-200 text-slate-700 p-3 rounded-lg font-bold hover:bg-slate-300 dark:bg-gray-600 dark:text-slate-200 dark:hover:bg-gray-500">Cancel</button>
                     </div>
                 </form>
-                <p className="text-center text-sm text-slate-500 mt-6">
-                    Already have an account? <button onClick={onSwitch} className="font-semibold text-indigo-600 hover:underline">Log In</button>
+                <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
+                    Already have an account? <button onClick={onSwitch} className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Log In</button>
                 </p>
             </div>
         </div>
@@ -1004,19 +1004,19 @@ function LoginModal({ onClose, onSwitch }) {
     
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md m-4">
-                <h2 className="text-2xl font-bold mb-4">Log In</h2>
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-md m-4">
+                <h2 className="text-2xl font-bold mb-4 dark:text-slate-100">Log In</h2>
                 {error && <p className="bg-red-100 text-red-700 p-3 rounded-lg mb-4">{error}</p>}
                 <form onSubmit={handleLogin} className="space-y-4">
-                    <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="Username" required className="w-full bg-slate-100 p-3 rounded-lg border-slate-300"/>
-                    <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required className="w-full bg-slate-100 p-3 rounded-lg border-slate-300"/>
+                    <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="Username" required className="w-full bg-slate-100 dark:bg-gray-700 dark:text-white dark:placeholder-slate-400 dark:border-gray-600 p-3 rounded-lg border-slate-300"/>
+                    <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required className="w-full bg-slate-100 dark:bg-gray-700 dark:text-white dark:placeholder-slate-400 dark:border-gray-600 p-3 rounded-lg border-slate-300"/>
                     <div className="flex justify-between items-center gap-4">
                          <button type="submit" disabled={loading} className="w-full bg-indigo-600 text-white p-3 rounded-lg font-bold hover:bg-indigo-700 disabled:bg-indigo-300">{loading ? 'Logging in...' : 'Log In'}</button>
-                        <button type="button" onClick={onClose} className="w-full bg-slate-200 text-slate-700 p-3 rounded-lg font-bold hover:bg-slate-300">Cancel</button>
+                        <button type="button" onClick={onClose} className="w-full bg-slate-200 text-slate-700 p-3 rounded-lg font-bold hover:bg-slate-300 dark:bg-gray-600 dark:text-slate-200 dark:hover:bg-gray-500">Cancel</button>
                     </div>
                 </form>
-                 <p className="text-center text-sm text-slate-500 mt-6">
-                    Don't have an account? <button onClick={onSwitch} className="font-semibold text-indigo-600 hover:underline">Log In</button>
+                 <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
+                    Don't have an account? <button onClick={onSwitch} className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Sign Up</button>
                 </p>
             </div>
         </div>
@@ -1026,15 +1026,15 @@ function LoginModal({ onClose, onSwitch }) {
 function CompleteRaceModal({ race, time, setTime, notes, setNotes, onClose, onComplete }) {
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <form onSubmit={onComplete} className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md m-4">
-                <h2 className="text-2xl font-bold mb-2">Complete Race</h2>
-                <p className="text-slate-500 mb-4 text-lg">{race.name}</p>
+            <form onSubmit={onComplete} className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-md m-4">
+                <h2 className="text-2xl font-bold mb-2 dark:text-slate-100">Complete Race</h2>
+                <p className="text-slate-500 dark:text-slate-400 mb-4 text-lg">{race.name}</p>
                 <div className="space-y-4">
-                     <input type="text" value={time} onChange={(e) => setTime(e.target.value)} placeholder="Completion Time (e.g., 45:32)" required className="w-full bg-slate-100 p-3 rounded-lg border-slate-300"/>
-                     <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes (e.g., weather, how you felt)" className="w-full bg-slate-100 p-3 rounded-lg border-slate-300 h-24 resize-none" />
+                     <input type="text" value={time} onChange={(e) => setTime(e.target.value)} placeholder="Completion Time (e.g., 45:32)" required className="w-full bg-slate-100 dark:bg-gray-700 dark:text-white dark:placeholder-slate-400 dark:border-gray-600 p-3 rounded-lg border-slate-300"/>
+                     <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes (e.g., weather, how you felt)" className="w-full bg-slate-100 dark:bg-gray-700 dark:text-white dark:placeholder-slate-400 dark:border-gray-600 p-3 rounded-lg border-slate-300 h-24 resize-none" />
                 </div>
                 <div className="flex justify-end gap-4 mt-6">
-                    <button type="button" onClick={onClose} className="bg-slate-200 text-slate-700 p-3 rounded-lg font-bold hover:bg-slate-300">
+                    <button type="button" onClick={onClose} className="bg-slate-200 text-slate-700 p-3 rounded-lg font-bold hover:bg-slate-300 dark:bg-gray-600 dark:text-slate-200 dark:hover:bg-gray-500">
                         Cancel
                     </button>
                     <button type="submit" className="bg-indigo-600 text-white p-3 rounded-lg font-bold hover:bg-indigo-700">
