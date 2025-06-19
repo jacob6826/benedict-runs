@@ -24,7 +24,7 @@ import {
     setLogLevel, 
     orderBy
 } from 'firebase/firestore';
-import { Clock, Flag, Plus, Trash2, Edit, Save, X, Target, Info, Calendar, Link as LinkIcon, User, LogOut, Award, Download, CheckSquare, Share2, ClipboardCopy, Moon, Sun, Gauge, BarChart2, ChevronDown, Route } from 'lucide-react';
+import { Clock, Flag, Plus, Trash2, Edit, Save, X, Target, Info, Calendar, Link as LinkIcon, User, LogOut, Award, Download, CheckSquare, Share2, ClipboardCopy, Moon, Sun, Gauge, BarChart2, ChevronDown, Milestone } from 'lucide-react';
 
 // --- Firebase Configuration ---
 const firebaseConfig = {
@@ -221,20 +221,15 @@ export default function App() {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // --- DIAGNOSTIC LOG ---
-                console.log(`Auth state changed. User FOUND with UID: ${user.uid}`);
                 setCurrentUser(user);
                 const userDocRef = doc(db, `artifacts/${appId}/users/${user.uid}/profile`, "data");
                 const userDocSnap = await getDoc(userDocRef);
                 if (userDocSnap.exists()) {
                     setUserProfile(userDocSnap.data());
                 } else {
-                     console.log(`User profile not found for UID: ${user.uid}. Creating a default one.`);
                      setUserProfile({ name: 'Runner', username: 'Runner' });
                 }
             } else {
-                // --- DIAGNOSTIC LOG ---
-                console.log("Auth state changed. User NOT found (logged out).");
                 setCurrentUser(null);
                 setUserProfile(null);
                 setCompletedRaces([]);
@@ -299,15 +294,12 @@ export default function App() {
     useEffect(() => {
         if (currentUser) {
             const path = `artifacts/${appId}/users/${currentUser.uid}/completedRaces`;
-            // --- DIAGNOSTIC LOG ---
-            console.log(`Listening for completed races at path: ${path}`);
             const completedRacesRef = collection(db, path);
             const q = query(completedRacesRef, orderBy('date', 'desc'));
             
             const unsubscribe = onSnapshot(q, (snapshot) => {
                 const races = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
                 setCompletedRaces(races);
-                console.log(`Successfully fetched ${races.length} completed races.`);
             }, (error) => {
                 console.error("Error fetching completed races:", error);
                 showAndHideNotification("Could not load race history.");
@@ -320,15 +312,12 @@ export default function App() {
     useEffect(() => {
         if (currentUser) {
             const path = `artifacts/${appId}/users/${currentUser.uid}/upcomingRaces`;
-            // --- DIAGNOSTIC LOG ---
-            console.log(`Listening for upcoming races at path: ${path}`);
             const upcomingRacesRef = collection(db, path);
             const q = query(upcomingRacesRef, orderBy('date', 'asc'));
             
             const unsubscribe = onSnapshot(q, (snapshot) => {
                 const races = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
                 setUpcomingRaces(races);
-                console.log(`Successfully fetched ${races.length} upcoming races.`);
             }, (error) => {
                 console.error("Error fetching upcoming races:", error);
                 showAndHideNotification("Could not load upcoming races.");
@@ -985,7 +974,7 @@ function Stats({ completedRaces }) {
                         </div>
                          <div className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center">
                             <div className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                                <Route size={16} />
+                                <Milestone size={16} />
                                 <span>Total Miles</span>
                             </div>
                             <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">{yearStats.totalMiles}</p>
