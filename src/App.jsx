@@ -24,7 +24,7 @@ import {
     setLogLevel, 
     orderBy
 } from 'firebase/firestore';
-import { Clock, Flag, Plus, Trash2, Edit, Save, X, Target, Info, Calendar, Link as LinkIcon, User, LogOut, Award, Download, CheckSquare, Share2, ClipboardCopy, Moon, Sun } from 'lucide-react';
+import { Clock, Flag, Plus, Trash2, Edit, Save, X, Target, Info, Calendar, Link as LinkIcon, User, LogOut, Award, Download, CheckSquare, Share2, ClipboardCopy, Moon, Sun, Gauge } from 'lucide-react';
 
 // --- Firebase Configuration ---
 const firebaseConfig = {
@@ -48,9 +48,9 @@ const db = getFirestore(app);
 console.log(`Connecting to Firebase project: ${firebaseConfig.projectId} with appId: ${appId}`);
 setLogLevel('debug');
 
-// --- Helper Function to convert time string to seconds ---
+// --- Helper Functions ---
 const timeToSeconds = (time) => {
-    if (!time || typeof time !== 'string') return Infinity;
+    if (!time || typeof time !== 'string') return 0;
     const parts = time.split(':').map(Number);
     let seconds = 0;
     if (parts.length === 3) { // HH:MM:SS
@@ -60,7 +60,43 @@ const timeToSeconds = (time) => {
     } else if (parts.length === 1) { // SS
         seconds = parts[0];
     }
-    return isNaN(seconds) ? Infinity : seconds;
+    return isNaN(seconds) ? 0 : seconds;
+};
+
+const distanceToMiles = (distance) => {
+    if (!distance || typeof distance !== 'string') return 0;
+    const lowerCaseDistance = distance.toLowerCase().trim();
+
+    switch (lowerCaseDistance) {
+        case '5k': return 3.10686;
+        case '10k': return 6.21371;
+        case '1/2 marathon': return 13.1094;
+        case 'marathon': return 26.2188;
+    }
+    
+    const numericalValue = parseFloat(lowerCaseDistance);
+    if (isNaN(numericalValue)) return 0;
+
+    if (lowerCaseDistance.includes('mile')) return numericalValue;
+    if (lowerCaseDistance.includes('mi')) return numericalValue;
+    if (lowerCaseDistance.includes('km')) return numericalValue * 0.621371;
+    if (lowerCaseDistance.includes('m') && !lowerCaseDistance.includes('mi')) return numericalValue / 1609.34;
+    
+    // Default to miles if no unit is specified
+    return numericalValue;
+};
+
+const formatPace = (time, distance) => {
+    const totalSeconds = timeToSeconds(time);
+    const totalMiles = distanceToMiles(distance);
+
+    if (totalSeconds === 0 || totalMiles === 0) return 'N/A';
+
+    const secondsPerMile = totalSeconds / totalMiles;
+    const paceMinutes = Math.floor(secondsPerMile / 60);
+    const paceSeconds = Math.round(secondsPerMile % 60);
+    
+    return `${paceMinutes}:${paceSeconds.toString().padStart(2, '0')}`;
 };
 
 const STANDARD_DISTANCES = ["5k", "10k", "1/2 Marathon", "Marathon"];
@@ -84,6 +120,7 @@ const CompletedRaceShareableCard = ({ race, isPR }) => (
         <div className="flex flex-col gap-4 mt-6 text-lg">
             <p className="text-slate-600 flex items-start"><Flag size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Distance:</strong><span className="ml-2 font-normal">{race.distance || 'N/A'}</span></span></p>
             <p className="text-indigo-600 font-semibold flex items-start"><Clock size={24} className="mr-4 flex-shrink-0 mt-0.5"/><span><strong>Time:</strong><span className="ml-2 font-normal">{race.time}</span></span></p>
+            <p className="text-slate-600 flex items-start"><Gauge size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Pace:</strong><span className="ml-2 font-normal">{formatPace(race.time, race.distance)} / mi</span></span></p>
             <p className="text-slate-600 flex items-start"><Calendar size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Date:</strong><span className="ml-2 font-normal">{race.date ? new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : 'No Date'}</span></span></p>
         </div>
         {race.notes && (
@@ -101,6 +138,7 @@ const UpcomingRaceShareableCard = ({ race }) => (
         <div className="mt-6 pt-6 border-t border-slate-200 flex flex-col gap-4 text-lg">
             <p className="flex items-start"><Flag size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Distance:</strong><span className="ml-2 font-normal">{race.distance || 'N/A'}</span></span></p>
             <p className="flex items-start"><Target size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Goal:</strong><span className="ml-2 font-normal">{race.goalTime || 'N/A'}</span></span></p>
+            {race.goalTime && <p className="flex items-start"><Gauge size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Goal Pace:</strong><span className="ml-2 font-normal">{formatPace(race.goalTime, race.distance)} / mi</span></span></p>}
             {race.info && <p className="flex items-start"><Info size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Info:</strong><span className="ml-2 font-normal">{race.info}</span></span></p>}
         </div>
     </div>
@@ -655,6 +693,7 @@ export default function App() {
                                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm">
                                                         <p className="text-slate-500 dark:text-slate-400 flex items-center"><Flag size={14} className="mr-1.5"/>{race.distance || 'N/A'}</p>
                                                         <p className="text-indigo-600 dark:text-indigo-400 font-medium flex items-center"><Clock size={14} className="mr-1.5" />{race.time}</p>
+                                                        <p className="text-slate-500 dark:text-slate-400 flex items-center"><Gauge size={14} className="mr-1.5"/>{formatPace(race.time, race.distance)}/mi</p>
                                                         <p className="text-slate-500 dark:text-slate-400 flex items-center"><Calendar size={14} className="mr-1.5"/>{race.date ? new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : 'No Date'}</p>
                                                     </div>
                                                     {race.notes && (
@@ -764,6 +803,7 @@ export default function App() {
                                                             <div className="mt-4 pt-4 border-t border-slate-200 dark:border-gray-700 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-slate-600 dark:text-slate-300 text-sm">
                                                                 <p className="flex items-center"><Flag size={16} className="mr-2 text-indigo-500 dark:text-indigo-400"/><strong>Distance:</strong><span className="ml-2">{race.distance || 'N/A'}</span></p>
                                                                 <p className="flex items-center"><Target size={16} className="mr-2 text-indigo-500 dark:text-indigo-400"/><strong>Goal:</strong><span className="ml-2">{race.goalTime || 'N/A'}</span></p>
+                                                                {race.goalTime && <p className="flex items-center"><Gauge size={16} className="mr-2 text-indigo-500 dark:text-indigo-400"/><strong>Goal Pace:</strong><span className="ml-2">{formatPace(race.goalTime, race.distance)}/mi</span></p>}
                                                                 {race.info && <p className="col-span-full flex items-start mt-1"><Info size={16} className="mr-2 text-indigo-500 dark:text-indigo-400 mt-0.5 flex-shrink-0"/><strong>Info:</strong><span className="ml-2">{race.info}</span></p>}
                                                             </div>
                                                         </div>
@@ -802,6 +842,10 @@ function PersonalRecords({ records }) {
                             {record ? (
                                 <div className="mt-2 text-sm">
                                     <p className="font-semibold text-2xl text-slate-700 dark:text-slate-200">{record.time}</p>
+                                    <p className="text-slate-500 dark:text-slate-400 flex items-center mt-2">
+                                        <Gauge size={14} className="mr-1.5 flex-shrink-0" />
+                                        <span>{formatPace(record.time, record.distance)} / mi</span>
+                                    </p>
                                     <p className="text-slate-500 dark:text-slate-400 mt-2 truncate" title={record.name}>{record.name}</p>
                                     <p className="text-slate-400 dark:text-slate-500 text-xs">{record.date ? new Date(record.date + 'T00:00:00').toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : ''}</p>
                                 </div>
@@ -835,6 +879,7 @@ function NewPRModal({ race, onClose }) {
             <div className="text-slate-600 mt-4 text-lg">
                 <p className="font-semibold">{race.name}</p>
                 <p>{race.distance} - <span className="font-bold text-indigo-600">{race.time}</span></p>
+                <p className="text-base mt-1">({formatPace(race.time, race.distance)} / mi)</p>
             </div>
         )}
         <button onClick={onClose} className="mt-6 w-full bg-indigo-600 text-white p-3 rounded-lg font-bold hover:bg-indigo-700">
