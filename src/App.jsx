@@ -675,17 +675,12 @@ export default function App() {
                                             <input type="text" value={newRaceTime} onChange={(e) => setNewRaceTime(e.target.value)} placeholder="Time (HH:MM:SS)" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                        </div>
                                        
-                                        <div className="relative md:col-span-2">
-                                            <input 
-                                                type="date" 
-                                                id="newRaceDate"
-                                                value={newRaceDate} 
-                                                onChange={(e) => setNewRaceDate(e.target.value)} 
-                                                className="appearance-none block w-full bg-slate-100 dark:bg-gray-700 rounded-lg border border-slate-300 dark:border-gray-600 px-4 py-2.5 text-inherit focus:outline-none focus:ring-2 focus:ring-indigo-500 peer"
-                                                placeholder=" "
-                                            />
-                                            <label htmlFor="newRaceDate" className="absolute text-sm text-slate-400 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] start-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Date</label>
-                                        </div>
+                                        <input 
+                                            type="date" 
+                                            value={newRaceDate} 
+                                            onChange={(e) => setNewRaceDate(e.target.value)} 
+                                            className={`md:col-span-2 appearance-none w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newRaceDate ? 'text-slate-400' : 'text-inherit'}`}
+                                        />
 
                                        <div className="relative md:col-span-6">
                                             <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
@@ -751,17 +746,12 @@ export default function App() {
                                             <input type="text" placeholder="Goal Time" value={newUpcomingRace.goalTime} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, goalTime: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                          </div>
                                          
-                                        <div className="relative md:col-span-2">
-                                            <input 
-                                                type="date" 
-                                                id="newUpcomingRaceDate"
-                                                value={newUpcomingRace.date} 
-                                                onChange={(e) => setNewUpcomingRace({...newUpcomingRace, date: e.target.value})}
-                                                className="appearance-none block w-full bg-slate-100 dark:bg-gray-700 rounded-lg border border-slate-300 dark:border-gray-600 px-4 py-2.5 text-inherit focus:outline-none focus:ring-2 focus:ring-indigo-500 peer"
-                                                placeholder=" "
-                                            />
-                                            <label htmlFor="newUpcomingRaceDate" className="absolute text-sm text-slate-400 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] start-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Date</label>
-                                        </div>
+                                        <input 
+                                            type="date" 
+                                            value={newUpcomingRace.date}
+                                            onChange={(e) => setNewUpcomingRace({...newUpcomingRace, date: e.target.value})}
+                                            className={`md:col-span-2 appearance-none w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newUpcomingRace.date ? 'text-slate-400' : 'text-inherit'}`}
+                                        />
                                          
                                          <div className="relative md:col-span-6">
                                              <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
@@ -805,13 +795,10 @@ export default function App() {
                                                                 <div className="relative col-span-2">
                                                                     <input 
                                                                         type="date"
-                                                                        id="editingDate" 
                                                                         value={editingUpcomingRaceData.date} 
                                                                         onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, date: e.target.value})} 
-                                                                        className="appearance-none block w-full bg-slate-100 dark:bg-gray-700 rounded-lg border border-slate-300 dark:border-gray-600 px-4 py-2.5 text-inherit focus:outline-none focus:ring-2 focus:ring-indigo-500 peer"
-                                                                        placeholder=" "
+                                                                        className={`w-full appearance-none bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!editingUpcomingRaceData.date ? 'text-slate-400' : 'text-inherit'}`}
                                                                     />
-                                                                     <label htmlFor="editingDate" className="absolute text-sm text-slate-400 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] start-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Date</label>
                                                                 </div>
                                                             </div>
                                                             <div className="relative">
@@ -900,7 +887,7 @@ function PersonalRecords({ records }) {
 
 // --- Stats Component ---
 function Stats({ completedRaces }) {
-    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [selectedYear, setSelectedYear] = useState('All');
     const [openDistance, setOpenDistance] = useState(null);
 
     const handleToggle = (distance) => {
@@ -908,17 +895,17 @@ function Stats({ completedRaces }) {
     };
 
     const availableYears = useMemo(() => {
-        if (!completedRaces || completedRaces.length === 0) return [new Date().getFullYear()];
+        if (!completedRaces || completedRaces.length === 0) return [];
         const years = new Set(completedRaces.map(race => new Date(race.date + 'T00:00:00').getFullYear()));
-        const currentYear = new Date().getFullYear();
-        years.add(currentYear);
         return Array.from(years).sort((a, b) => b - a);
     }, [completedRaces]);
 
     const yearStats = useMemo(() => {
-        const racesInYear = completedRaces.filter(race => new Date(race.date + 'T00:00:00').getFullYear() === selectedYear);
+        const filteredRaces = selectedYear === 'All'
+            ? completedRaces
+            : completedRaces.filter(race => new Date(race.date + 'T00:00:00').getFullYear() === Number(selectedYear));
         
-        const racesByDistance = racesInYear.reduce((acc, race) => {
+        const racesByDistance = filteredRaces.reduce((acc, race) => {
             const distance = race.distance || 'N/A';
             if (!acc[distance]) {
                 acc[distance] = [];
@@ -929,7 +916,7 @@ function Stats({ completedRaces }) {
 
         const yearBests = {};
         STANDARD_DISTANCES.forEach(distance => {
-            const relevantRaces = racesInYear.filter(r => r.distance === distance);
+            const relevantRaces = filteredRaces.filter(r => r.distance === distance);
             if(relevantRaces.length > 0) {
                 const bestRace = relevantRaces.reduce((best, current) => 
                     timeToSeconds(current.time) < timeToSeconds(best.time) ? current : best
@@ -940,12 +927,20 @@ function Stats({ completedRaces }) {
             }
         });
         
-        return { racesByDistance, yearBests };
+        // Sort races within each distance group by date
+        for (const distance in racesByDistance) {
+            racesByDistance[distance].sort((a, b) => new Date(b.date) - new Date(a.date));
+        }
+
+        return { 
+            racesByDistance: Object.entries(racesByDistance).sort((a,b) => b[1].length - a[1].length), 
+            yearBests 
+        };
 
     }, [completedRaces, selectedYear]);
 
     if (completedRaces.length === 0) {
-        return null; // Don't render anything if there are no races ever
+        return null; 
     }
 
     return (
@@ -956,18 +951,19 @@ function Stats({ completedRaces }) {
                 </h2>
                 <select 
                     value={selectedYear} 
-                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                    onChange={(e) => setSelectedYear(e.target.value)}
                     className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit rounded-lg px-4 py-2 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
+                    <option value="All">All Time</option>
                     {availableYears.map(year => <option key={year} value={year}>{year}</option>)}
                 </select>
             </div>
 
-            {Object.keys(yearStats.racesByDistance).length > 0 ? (
+            {yearStats.racesByDistance.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* Left Column: Accordion List */}
                     <div className="space-y-2">
-                        {Object.entries(yearStats.racesByDistance).map(([distance, races]) => (
+                        {yearStats.racesByDistance.map(([distance, races]) => (
                             <div key={distance} className="border-b border-slate-200 dark:border-gray-700 last:border-b-0">
                                 <button onClick={() => handleToggle(distance)} className="w-full flex justify-between items-center p-3 hover:bg-slate-50 dark:hover:bg-gray-700/50 rounded-lg">
                                     <span className="font-bold">{distance}</span>
@@ -995,7 +991,7 @@ function Stats({ completedRaces }) {
                     
                     {/* Right Column: Year Best Grid */}
                     <div>
-                        <h3 className="font-bold mb-3 text-lg text-center">Best Times in {selectedYear}</h3>
+                        <h3 className="font-bold mb-3 text-lg text-center">Best Times in {selectedYear === 'All' ? 'All Time' : selectedYear}</h3>
                         <div className="grid grid-cols-2 gap-4">
                             {STANDARD_DISTANCES.map(distance => (
                                 <div key={distance} className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center">
@@ -1012,6 +1008,7 @@ function Stats({ completedRaces }) {
         </section>
     );
 }
+
 
 // --- Authentication Modals ---
 function NewPRModal({ race, onClose }) {
