@@ -24,7 +24,7 @@ import {
     setLogLevel, 
     orderBy
 } from 'firebase/firestore';
-import { Clock, Flag, Plus, Trash2, Edit, Save, X, Target, Info, Calendar, Link as LinkIcon, User, LogOut, Award, Download, CheckSquare, Share2, ClipboardCopy, Moon, Sun, Gauge } from 'lucide-react';
+import { Clock, Flag, Plus, Trash2, Edit, Save, X, Target, Info, Calendar, Link as LinkIcon, User, LogOut, Award, Download, CheckSquare, Share2, ClipboardCopy, Moon, Sun, Gauge, BarChart2, Route } from 'lucide-react';
 
 // --- Firebase Configuration ---
 const firebaseConfig = {
@@ -645,6 +645,7 @@ export default function App() {
                     {currentUser ? (
                         <>
                             <PersonalRecords records={personalRecords} />
+                            <Stats completedRaces={completedRaces} />
                             <main className="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-10">
                                 {/* Race History Section */}
                                 <section className="bg-white dark:bg-gray-800/50 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-gray-700">
@@ -674,12 +675,17 @@ export default function App() {
                                             <input type="text" value={newRaceTime} onChange={(e) => setNewRaceTime(e.target.value)} placeholder="Time (HH:MM:SS)" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                        </div>
                                        
-                                        <input 
-                                            type="date" 
-                                            value={newRaceDate} 
-                                            onChange={(e) => setNewRaceDate(e.target.value)} 
-                                            className={`md:col-span-2 appearance-none w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newRaceDate ? 'text-slate-400' : 'text-inherit'}`}
-                                        />
+                                        <div className="relative md:col-span-2">
+                                            <input 
+                                                type="date" 
+                                                id="newRaceDate"
+                                                value={newRaceDate} 
+                                                onChange={(e) => setNewRaceDate(e.target.value)} 
+                                                className="appearance-none block w-full bg-slate-100 dark:bg-gray-700 rounded-lg border border-slate-300 dark:border-gray-600 px-4 py-2.5 text-inherit focus:outline-none focus:ring-2 focus:ring-indigo-500 peer"
+                                                placeholder=" "
+                                            />
+                                            <label htmlFor="newRaceDate" className="absolute text-sm text-slate-400 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] start-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Date</label>
+                                        </div>
 
                                        <div className="relative md:col-span-6">
                                             <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
@@ -745,12 +751,17 @@ export default function App() {
                                             <input type="text" placeholder="Goal Time" value={newUpcomingRace.goalTime} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, goalTime: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                          </div>
                                          
-                                        <input 
-                                            type="date" 
-                                            value={newUpcomingRace.date}
-                                            onChange={(e) => setNewUpcomingRace({...newUpcomingRace, date: e.target.value})}
-                                            className={`md:col-span-2 appearance-none w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newUpcomingRace.date ? 'text-slate-400' : 'text-inherit'}`}
-                                        />
+                                        <div className="relative md:col-span-2">
+                                            <input 
+                                                type="date" 
+                                                id="newUpcomingRaceDate"
+                                                value={newUpcomingRace.date} 
+                                                onChange={(e) => setNewUpcomingRace({...newUpcomingRace, date: e.target.value})}
+                                                className="appearance-none block w-full bg-slate-100 dark:bg-gray-700 rounded-lg border border-slate-300 dark:border-gray-600 px-4 py-2.5 text-inherit focus:outline-none focus:ring-2 focus:ring-indigo-500 peer"
+                                                placeholder=" "
+                                            />
+                                            <label htmlFor="newUpcomingRaceDate" className="absolute text-sm text-slate-400 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] start-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Date</label>
+                                        </div>
                                          
                                          <div className="relative md:col-span-6">
                                              <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
@@ -794,11 +805,13 @@ export default function App() {
                                                                 <div className="relative col-span-2">
                                                                     <input 
                                                                         type="date"
+                                                                        id="editingDate" 
                                                                         value={editingUpcomingRaceData.date} 
                                                                         onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, date: e.target.value})} 
-                                                                        className={`w-full appearance-none bg-slate-100 dark:bg-gray-700 dark:border-gray-600 p-2.5 px-4 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500
-                                                                                    ${!editingUpcomingRaceData.date ? 'text-slate-400' : 'text-inherit'}`}
+                                                                        className="appearance-none block w-full bg-slate-100 dark:bg-gray-700 rounded-lg border border-slate-300 dark:border-gray-600 px-4 py-2.5 text-inherit focus:outline-none focus:ring-2 focus:ring-indigo-500 peer"
+                                                                        placeholder=" "
                                                                     />
+                                                                     <label htmlFor="editingDate" className="absolute text-sm text-slate-400 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] start-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Date</label>
                                                                 </div>
                                                             </div>
                                                             <div className="relative">
@@ -881,6 +894,123 @@ function PersonalRecords({ records }) {
                     );
                 })}
             </div>
+        </section>
+    );
+}
+
+// --- Stats Component ---
+function Stats({ completedRaces }) {
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+    const availableYears = useMemo(() => {
+        const years = new Set(completedRaces.map(race => new Date(race.date + 'T00:00:00').getFullYear()));
+        return Array.from(years).sort((a, b) => b - a);
+    }, [completedRaces]);
+
+    const yearStats = useMemo(() => {
+        const racesInYear = completedRaces.filter(race => new Date(race.date + 'T00:00:00').getFullYear() === selectedYear);
+        
+        const totalMiles = racesInYear.reduce((sum, race) => sum + distanceToMiles(race.distance), 0);
+
+        const statsByDistance = racesInYear.reduce((acc, race) => {
+            const distance = race.distance || 'N/A';
+            if (!acc[distance]) {
+                acc[distance] = { count: 0, bestTime: 'N/A', bestTimeInSeconds: Infinity };
+            }
+            acc[distance].count++;
+            const currentTimeInSeconds = timeToSeconds(race.time);
+            if (currentTimeInSeconds < acc[distance].bestTimeInSeconds) {
+                acc[distance].bestTime = race.time;
+                acc[distance].bestTimeInSeconds = currentTimeInSeconds;
+            }
+            return acc;
+        }, {});
+
+        return {
+            racesInYear,
+            totalRaces: racesInYear.length,
+            totalMiles: totalMiles.toFixed(2),
+            statsByDistance: Object.entries(statsByDistance).sort((a, b) => b[1].count - a[1].count)
+        };
+
+    }, [completedRaces, selectedYear]);
+
+    if (completedRaces.length === 0) {
+        return null; // Don't render anything if there are no races
+    }
+
+    return (
+        <section className="bg-white dark:bg-gray-800/50 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-gray-700 mt-10">
+            <div className="flex justify-between items-center mb-5">
+                <h2 className="text-2xl font-bold flex items-center">
+                    <BarChart2 className="mr-3 text-indigo-500 dark:text-indigo-400" />Year in Review
+                </h2>
+                {availableYears.length > 0 && (
+                    <select 
+                        value={selectedYear} 
+                        onChange={(e) => setSelectedYear(Number(e.target.value))}
+                        className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit rounded-lg px-4 py-2 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                        {availableYears.map(year => <option key={year} value={year}>{year}</option>)}
+                    </select>
+                )}
+            </div>
+
+            {yearStats.totalRaces > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Summary Cards */}
+                    <div className="col-span-1 md:col-span-3 grid grid-cols-2 gap-4 text-center">
+                        <div className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg">
+                            <p className="text-sm text-slate-500 dark:text-slate-400">Total Races</p>
+                            <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{yearStats.totalRaces}</p>
+                        </div>
+                         <div className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg">
+                            <p className="text-sm text-slate-500 dark:text-slate-400">Total Miles</p>
+                            <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{yearStats.totalMiles}</p>
+                        </div>
+                    </div>
+                    
+                    {/* Distance Breakdown */}
+                    <div className="md:col-span-2">
+                         <h3 className="font-bold mb-3 text-lg">Distance Breakdown</h3>
+                         <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 dark:bg-gray-700/50 text-xs text-slate-500 dark:text-slate-400 uppercase">
+                                    <tr>
+                                        <th className="px-4 py-2">Distance</th>
+                                        <th className="px-4 py-2">Count</th>
+                                        <th className="px-4 py-2">Best Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {yearStats.statsByDistance.map(([distance, stats]) => (
+                                        <tr key={distance} className="border-b border-slate-100 dark:border-gray-700">
+                                            <td className="px-4 py-3 font-semibold">{distance}</td>
+                                            <td className="px-4 py-3">{stats.count}</td>
+                                            <td className="px-4 py-3">{stats.bestTime}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* Race List */}
+                    <div>
+                        <h3 className="font-bold mb-3 text-lg">Races Run</h3>
+                        <ul className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                           {yearStats.racesInYear.map(race => (
+                               <li key={race.id} className="text-sm p-2 bg-slate-50 dark:bg-gray-700/50 rounded-md">
+                                   <p className="font-semibold truncate">{race.name}</p>
+                                   <p className="text-xs text-slate-400">{new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                               </li>
+                           ))}
+                        </ul>
+                    </div>
+                </div>
+            ) : (
+                <p className="text-slate-400 dark:text-slate-500 text-center py-8">No races completed in {selectedYear}.</p>
+            )}
         </section>
     );
 }
