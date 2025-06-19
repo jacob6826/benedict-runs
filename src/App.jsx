@@ -62,6 +62,15 @@ const timeToSeconds = (time) => {
 
 const STANDARD_DISTANCES = ["5k", "10k", "1/2 Marathon", "Marathon"];
 
+// --- Loading Spinner Component ---
+function LoadingSpinner() {
+    return (
+        <div className="flex justify-center items-center min-h-screen">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-500"></div>
+        </div>
+    );
+}
+
 // --- Shareable Card Components ---
 const CompletedRaceShareableCard = ({ race, isPR }) => (
     <div id={`shareable-completed-card-${race.id}`} className="bg-slate-50 border border-slate-200 p-8 rounded-lg w-[450px]">
@@ -532,18 +541,20 @@ export default function App() {
                 {raceToShare && raceToShare.type === 'upcoming' && <UpcomingRaceShareableCard race={raceToShare.data} />}
             </div>
 
-            <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-                <header className="flex justify-between items-center mb-12">
-                    <div className="flex items-center">
-                        <img src="https://storage.googleapis.com/gemini-prod-us-west1-assets/image_f2dd41.jpg" alt="Benedict Runs Logo" className="w-16 h-16 mr-4 rounded-lg" />
-                        <div className="text-left">
-                            <h1 className="text-4xl sm:text-5xl font-bold text-indigo-600 dark:text-indigo-400 tracking-tight">{userProfile?.name ? `${userProfile.name}'s` : "My"} Runs</h1>
-                            <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg">Your personal race tracking dashboard</p>
+            {!isAuthReady ? (
+                <LoadingSpinner />
+            ) : (
+                <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+                    <header className="flex justify-between items-center mb-12">
+                        <div className="flex items-center">
+                            <img src="https://storage.googleapis.com/gemini-prod-us-west1-assets/image_f2dd41.jpg" alt="Benedict Runs Logo" className="w-16 h-16 mr-4 rounded-lg" />
+                            <div className="text-left">
+                                <h1 className="text-4xl sm:text-5xl font-bold text-indigo-600 dark:text-indigo-400 tracking-tight">{userProfile?.name ? `${userProfile.name}'s` : "My"} Runs</h1>
+                                <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg">Your personal race tracking dashboard</p>
+                            </div>
                         </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {isAuthReady && (
-                            currentUser ? (
+                        <div className="flex items-center gap-2">
+                            {currentUser ? (
                                 <div className="relative" ref={settingsRef}>
                                     <button onClick={() => setShowSettings(s => !s)} className="flex items-center gap-2 text-slate-600 dark:text-slate-300 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-800">
                                         <User size={18}/>
@@ -570,191 +581,191 @@ export default function App() {
                                     <button onClick={() => setShowLoginModal(true)} className="font-semibold text-indigo-600 hover:text-indigo-800 py-2 px-4 rounded-lg">Log In</button>
                                     <button onClick={() => setShowSignUpModal(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md">Sign Up</button>
                                 </>
-                            )
-                        )}
-                    </div>
-                </header>
+                            )}
+                        </div>
+                    </header>
 
-                {currentUser ? (
-                    <>
-                        <PersonalRecords records={personalRecords} />
-                        <main className="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-10">
-                            {/* Race History Section */}
-                            <section className="bg-white dark:bg-gray-800/50 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-gray-700">
-                                <h2 className="text-2xl font-bold mb-5 flex items-center"><Flag className="mr-3 text-indigo-500 dark:text-indigo-400" />Race History</h2>
-                                <form onSubmit={handleAddCompletedRace} className="mb-6 grid grid-cols-1 md:grid-cols-6 gap-4">
-                                   <input type="text" value={newRaceName} onChange={(e) => setNewRaceName(e.target.value)} placeholder="Race Name" className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
-                                   
-                                   <div className={`grid gap-2 md:col-span-2 ${showCustomHistoryDistance ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                                        <select value={showCustomHistoryDistance ? 'Custom' : newRaceDistance} 
-                                            onChange={e => {
-                                                if (e.target.value === 'Custom') {
-                                                    setShowCustomHistoryDistance(true);
-                                                    setNewRaceDistance('');
-                                                } else {
-                                                    setShowCustomHistoryDistance(false);
-                                                    setNewRaceDistance(e.target.value);
-                                                }
-                                            }}
-                                            className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                            {STANDARD_DISTANCES.map(d => <option key={d} value={d}>{d}</option>)}
-                                            <option value="Custom">Custom</option>
-                                        </select>
-                                        {showCustomHistoryDistance && <input type="text" value={newRaceDistance} onChange={e => setNewRaceDistance(e.target.value)} placeholder="Custom" className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>}
-                                   </div>
+                    {currentUser ? (
+                        <>
+                            <PersonalRecords records={personalRecords} />
+                            <main className="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-10">
+                                {/* Race History Section */}
+                                <section className="bg-white dark:bg-gray-800/50 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-gray-700">
+                                    <h2 className="text-2xl font-bold mb-5 flex items-center"><Flag className="mr-3 text-indigo-500 dark:text-indigo-400" />Race History</h2>
+                                    <form onSubmit={handleAddCompletedRace} className="mb-6 grid grid-cols-1 md:grid-cols-6 gap-4">
+                                       <input type="text" value={newRaceName} onChange={(e) => setNewRaceName(e.target.value)} placeholder="Race Name" className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                       
+                                       <div className={`grid gap-2 md:col-span-2 ${showCustomHistoryDistance ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                                            <select value={showCustomHistoryDistance ? 'Custom' : newRaceDistance} 
+                                                onChange={e => {
+                                                    if (e.target.value === 'Custom') {
+                                                        setShowCustomHistoryDistance(true);
+                                                        setNewRaceDistance('');
+                                                    } else {
+                                                        setShowCustomHistoryDistance(false);
+                                                        setNewRaceDistance(e.target.value);
+                                                    }
+                                                }}
+                                                className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                                {STANDARD_DISTANCES.map(d => <option key={d} value={d}>{d}</option>)}
+                                                <option value="Custom">Custom</option>
+                                            </select>
+                                            {showCustomHistoryDistance && <input type="text" value={newRaceDistance} onChange={e => setNewRaceDistance(e.target.value)} placeholder="Custom" className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>}
+                                       </div>
 
-                                   <input type="text" value={newRaceTime} onChange={(e) => setNewRaceTime(e.target.value)} placeholder="Time ( 4:25:30)" className="md:col-span-2 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
-                                   
-                                   <input type="date" value={newRaceDate} onChange={(e) => setNewRaceDate(e.target.value)} className={`md:col-span-2 w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newRaceDate ? 'text-slate-400 dark:text-slate-500' : 'dark:text-white'}`}/>
+                                       <input type="text" value={newRaceTime} onChange={(e) => setNewRaceTime(e.target.value)} placeholder="Time ( 4:25:30)" className="md:col-span-2 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                       
+                                       <input type="date" value={newRaceDate} onChange={(e) => setNewRaceDate(e.target.value)} className={`md:col-span-2 w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newRaceDate ? 'text-slate-400 dark:text-slate-500' : 'dark:text-white'}`}/>
 
-                                   <div className="relative md:col-span-6">
-                                        <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
-                                        <input type="url" value={newRaceLink} onChange={(e) => setNewRaceLink(e.target.value)} placeholder="Race Website Link (Optional)" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
-                                   </div>
-                                   
-                                   <textarea value={newRaceNotes} onChange={(e) => setNewRaceNotes(e.target.value)} placeholder="Notes (e.g., weather, how you felt)" className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none h-20"/>
+                                       <div className="relative md:col-span-6">
+                                            <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
+                                            <input type="url" value={newRaceLink} onChange={(e) => setNewRaceLink(e.target.value)} placeholder="Race Website Link (Optional)" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
+                                       </div>
+                                       
+                                       <textarea value={newRaceNotes} onChange={(e) => setNewRaceNotes(e.target.value)} placeholder="Notes (e.g., weather, how you felt)" className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none h-20"/>
 
-                                   <button type="submit" className="md:col-span-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md"><Plus size={20} className="mr-2"/> Add To History</button>
-                                </form>
-                                <div className="space-y-3 max-h-[32rem] overflow-y-auto pr-2">
-                                   {completedRaces.length > 0 ? completedRaces.map(race => {
-                                       const isPR = personalRecords[race.distance]?.id === race.id;
-                                       return (
-                                        <div id={`completed-card-${race.id}`} key={race.id} className="bg-slate-50 dark:bg-gray-700/50 border border-slate-200 dark:border-gray-700 p-4 rounded-lg flex justify-between items-center transition-all hover:shadow-md dark:hover:border-gray-600">
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2">
-                                                    {isPR && <Award className="text-amber-500 flex-shrink-0" size={18} />}
-                                                    <p className="font-semibold text-slate-700 dark:text-slate-200 truncate">{race.name}</p>
+                                       <button type="submit" className="md:col-span-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md"><Plus size={20} className="mr-2"/> Add To History</button>
+                                    </form>
+                                    <div className="space-y-3 max-h-[32rem] overflow-y-auto pr-2">
+                                       {completedRaces.length > 0 ? completedRaces.map(race => {
+                                           const isPR = personalRecords[race.distance]?.id === race.id;
+                                           return (
+                                            <div id={`completed-card-${race.id}`} key={race.id} className="bg-slate-50 dark:bg-gray-700/50 border border-slate-200 dark:border-gray-700 p-4 rounded-lg flex justify-between items-center transition-all hover:shadow-md dark:hover:border-gray-600">
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        {isPR && <Award className="text-amber-500 flex-shrink-0" size={18} />}
+                                                        <p className="font-semibold text-slate-700 dark:text-slate-200 truncate">{race.name}</p>
+                                                    </div>
+                                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm">
+                                                        <p className="text-slate-500 dark:text-slate-400 flex items-center"><Flag size={14} className="mr-1.5"/>{race.distance || 'N/A'}</p>
+                                                        <p className="text-indigo-600 dark:text-indigo-400 font-medium flex items-center"><Clock size={14} className="mr-1.5" />{race.time}</p>
+                                                        <p className="text-slate-500 dark:text-slate-400 flex items-center"><Calendar size={14} className="mr-1.5"/>{race.date ? new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : 'No Date'}</p>
+                                                    </div>
+                                                    {race.notes && (
+                                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 pt-2 border-t border-slate-200 dark:border-gray-600">
+                                                            {race.notes}
+                                                        </p>
+                                                    )}
                                                 </div>
-                                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm">
-                                                    <p className="text-slate-500 dark:text-slate-400 flex items-center"><Flag size={14} className="mr-1.5"/>{race.distance || 'N/A'}</p>
-                                                    <p className="text-indigo-600 dark:text-indigo-400 font-medium flex items-center"><Clock size={14} className="mr-1.5" />{race.time}</p>
-                                                    <p className="text-slate-500 dark:text-slate-400 flex items-center"><Calendar size={14} className="mr-1.5"/>{race.date ? new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : 'No Date'}</p>
+                                                <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                                                    <button onClick={() => handleInitiateShare(race, 'completed')} className="text-slate-400 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-gray-600"><Share2 size={18}/></button>
+                                                    {race.link && <a href={race.link} target="_blank" rel="noopener noreferrer" className="text-slate-400 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-gray-600" aria-label="Race Website"><LinkIcon size={18}/></a>}
+                                                    <button onClick={() => handleDeleteRace(race.id, 'completedRaces')} className="text-slate-400 dark:text-slate-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-500/20" aria-label="Delete race"><Trash2 size={18}/></button>
                                                 </div>
-                                                {race.notes && (
-                                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 pt-2 border-t border-slate-200 dark:border-gray-600">
-                                                        {race.notes}
-                                                    </p>
-                                                )}
                                             </div>
-                                            <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                                                <button onClick={() => handleInitiateShare(race, 'completed')} className="text-slate-400 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-gray-600"><Share2 size={18}/></button>
-                                                {race.link && <a href={race.link} target="_blank" rel="noopener noreferrer" className="text-slate-400 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-gray-600" aria-label="Race Website"><LinkIcon size={18}/></a>}
-                                                <button onClick={() => handleDeleteRace(race.id, 'completedRaces')} className="text-slate-400 dark:text-slate-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-500/20" aria-label="Delete race"><Trash2 size={18}/></button>
-                                            </div>
-                                        </div>
-                                    )}) : <p className="text-slate-400 dark:text-slate-500 text-center py-8">No completed races yet.</p>}
-                                </div>
-                            </section>
-
-                            {/* Upcoming Races Section */}
-                            <section className="bg-white dark:bg-gray-800/50 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-gray-700">
-                                 <h2 className="text-2xl font-bold mb-5 flex items-center"><Calendar className="mr-3 text-indigo-500 dark:text-indigo-400" />Upcoming Races</h2>
-                                 <form onSubmit={handleAddUpcomingRace} className="mb-6 grid grid-cols-1 md:grid-cols-6 gap-4">
-                                     <input type="text" placeholder="Race Name" value={newUpcomingRace.name} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, name: e.target.value})} className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
-                                     
-                                     <div className={`md:col-span-2 grid gap-2 ${showCustomUpcomingDistance ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                                         <select value={showCustomUpcomingDistance ? 'Custom' : newUpcomingRace.distance} 
-                                             onChange={e => {
-                                                 const val = e.target.value;
-                                                 setShowCustomUpcomingDistance(val === 'Custom');
-                                                 setNewUpcomingRace({...newUpcomingRace, distance: val === 'Custom' ? '' : val});
-                                             }}
-                                             className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                             {STANDARD_DISTANCES.map(d => <option key={d} value={d}>{d}</option>)}
-                                             <option value="Custom">Custom</option>
-                                         </select>
-                                         {showCustomUpcomingDistance && <input type="text" value={newUpcomingRace.distance} onChange={e => setNewUpcomingRace({...newUpcomingRace, distance: e.target.value})} placeholder="Custom" className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>}
+                                        )}) : <p className="text-slate-400 dark:text-slate-500 text-center py-8">No completed races yet.</p>}
                                     </div>
-                                     <input type="text" placeholder="Goal Time" value={newUpcomingRace.goalTime} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, goalTime: e.target.value})} className="md:col-span-2 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
-                                     
-                                     <input type="date" value={newUpcomingRace.date} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, date: e.target.value})} className={`md:col-span-2 w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newUpcomingRace.date ? 'text-slate-400 dark:text-slate-500' : 'dark:text-white'}`}/>
-                                     
-                                     <div className="relative md:col-span-6">
-                                         <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
-                                         <input type="url" placeholder="Race Website Link (Optional)" value={newUpcomingRace.link} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, link: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
-                                     </div>
+                                </section>
 
-                                     <textarea placeholder="Related Info (e.g., location, registration link)" value={newUpcomingRace.info} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, info: e.target.value})} className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 h-20 resize-none"/>
-                                     <button type="submit" className="md:col-span-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md"><Plus size={20} className="mr-2"/> Add Upcoming Race</button>
-                                 </form>
-                                 <div className="space-y-4 max-h-[32rem] overflow-y-auto pr-2">
-                                     {upcomingRaces.length > 0 ? upcomingRaces.map(race => {
-                                            const isPast = new Date(race.date + 'T00:00:00') < new Date();
-                                            return (
-                                            <div id={`upcoming-card-${race.id}`} key={race.id} className="bg-slate-50 dark:bg-gray-700/50 border border-slate-200 dark:border-gray-700 rounded-lg transition-all hover:shadow-md dark:hover:border-gray-600 overflow-hidden relative">
-                                                {isPast && !race.completed && (
-                                                    <button onClick={() => handleOpenCompleteModal(race)} className="bg-green-100 dark:bg-green-800/20 text-green-800 dark:text-green-300 w-full p-2 flex items-center justify-center text-sm font-semibold hover:bg-green-200 dark:hover:bg-green-800/40 transition-colors">
-                                                        Mark as complete?
-                                                        <CheckSquare size={18} className="ml-2" />
-                                                    </button>
-                                                )}
-                                                {editingUpcomingRaceId === race.id ? (
-                                                    <div className="p-4 space-y-3">
-                                                        <input type="text" value={editingUpcomingRaceData.name} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, name: e.target.value})} className="w-full bg-white dark:bg-gray-600 p-2 rounded border-slate-300 dark:border-gray-500"/>
-                                                        <div className="grid grid-cols-6 gap-4">
-                                                            <div className={`col-span-2 grid gap-4 ${showCustomEditDistance ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                                                                <select value={showCustomEditDistance ? 'Custom' : editingUpcomingRaceData.distance} 
-                                                                    onChange={e => {
-                                                                        const val = e.target.value;
-                                                                        setShowCustomEditDistance(val === 'Custom');
-                                                                        setEditingUpcomingRaceData({...editingUpcomingRaceData, distance: val === 'Custom' ? '' : val});
-                                                                    }}
-                                                                    className="w-full bg-white dark:bg-gray-600 p-2 rounded border-slate-300 dark:border-gray-500">
-                                                                    {STANDARD_DISTANCES.map(d => <option key={d} value={d}>{d}</option>)}
-                                                                    <option value="Custom">Custom</option>
-                                                                </select>
-                                                                {showCustomEditDistance && <input type="text" value={editingUpcomingRaceData.distance} onChange={e => setEditingUpcomingRaceData({...editingUpcomingRaceData, distance: e.target.value})} placeholder="Custom" className="w-full bg-white dark:bg-gray-600 p-2 rounded border-slate-300 dark:border-gray-500"/>}
+                                {/* Upcoming Races Section */}
+                                <section className="bg-white dark:bg-gray-800/50 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-gray-700">
+                                     <h2 className="text-2xl font-bold mb-5 flex items-center"><Calendar className="mr-3 text-indigo-500 dark:text-indigo-400" />Upcoming Races</h2>
+                                     <form onSubmit={handleAddUpcomingRace} className="mb-6 grid grid-cols-1 md:grid-cols-6 gap-4">
+                                         <input type="text" placeholder="Race Name" value={newUpcomingRace.name} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, name: e.target.value})} className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                         
+                                         <div className={`md:col-span-2 grid gap-2 ${showCustomUpcomingDistance ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                                             <select value={showCustomUpcomingDistance ? 'Custom' : newUpcomingRace.distance} 
+                                                 onChange={e => {
+                                                     const val = e.target.value;
+                                                     setShowCustomUpcomingDistance(val === 'Custom');
+                                                     setNewUpcomingRace({...newUpcomingRace, distance: val === 'Custom' ? '' : val});
+                                                 }}
+                                                 className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                                 {STANDARD_DISTANCES.map(d => <option key={d} value={d}>{d}</option>)}
+                                                 <option value="Custom">Custom</option>
+                                             </select>
+                                             {showCustomUpcomingDistance && <input type="text" value={newUpcomingRace.distance} onChange={e => setNewUpcomingRace({...newUpcomingRace, distance: e.target.value})} placeholder="Custom" className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>}
+                                        </div>
+                                         <input type="text" placeholder="Goal Time" value={newUpcomingRace.goalTime} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, goalTime: e.target.value})} className="md:col-span-2 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                         
+                                         <input type="date" value={newUpcomingRace.date} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, date: e.target.value})} className={`md:col-span-2 w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newUpcomingRace.date ? 'text-slate-400 dark:text-slate-500' : 'dark:text-white'}`}/>
+                                         
+                                         <div className="relative md:col-span-6">
+                                             <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
+                                             <input type="url" placeholder="Race Website Link (Optional)" value={newUpcomingRace.link} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, link: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
+                                         </div>
+
+                                         <textarea placeholder="Related Info (e.g., location, registration link)" value={newUpcomingRace.info} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, info: e.target.value})} className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 h-20 resize-none"/>
+                                         <button type="submit" className="md:col-span-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md"><Plus size={20} className="mr-2"/> Add Upcoming Race</button>
+                                     </form>
+                                     <div className="space-y-4 max-h-[32rem] overflow-y-auto pr-2">
+                                         {upcomingRaces.length > 0 ? upcomingRaces.map(race => {
+                                                const isPast = new Date(race.date + 'T00:00:00') < new Date();
+                                                return (
+                                                <div id={`upcoming-card-${race.id}`} key={race.id} className="bg-slate-50 dark:bg-gray-700/50 border border-slate-200 dark:border-gray-700 rounded-lg transition-all hover:shadow-md dark:hover:border-gray-600 overflow-hidden relative">
+                                                    {isPast && !race.completed && (
+                                                        <button onClick={() => handleOpenCompleteModal(race)} className="bg-green-100 dark:bg-green-800/20 text-green-800 dark:text-green-300 w-full p-2 flex items-center justify-center text-sm font-semibold hover:bg-green-200 dark:hover:bg-green-800/40 transition-colors">
+                                                            Mark as complete?
+                                                            <CheckSquare size={18} className="ml-2" />
+                                                        </button>
+                                                    )}
+                                                    {editingUpcomingRaceId === race.id ? (
+                                                        <div className="p-4 space-y-3">
+                                                            <input type="text" value={editingUpcomingRaceData.name} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, name: e.target.value})} className="w-full bg-white dark:bg-gray-600 p-2 rounded border-slate-300 dark:border-gray-500"/>
+                                                            <div className="grid grid-cols-6 gap-4">
+                                                                <div className={`col-span-2 grid gap-4 ${showCustomEditDistance ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                                                                    <select value={showCustomEditDistance ? 'Custom' : editingUpcomingRaceData.distance} 
+                                                                        onChange={e => {
+                                                                            const val = e.target.value;
+                                                                            setShowCustomEditDistance(val === 'Custom');
+                                                                            setEditingUpcomingRaceData({...editingUpcomingRaceData, distance: val === 'Custom' ? '' : val});
+                                                                        }}
+                                                                        className="w-full bg-white dark:bg-gray-600 p-2 rounded border-slate-300 dark:border-gray-500">
+                                                                        {STANDARD_DISTANCES.map(d => <option key={d} value={d}>{d}</option>)}
+                                                                        <option value="Custom">Custom</option>
+                                                                    </select>
+                                                                    {showCustomEditDistance && <input type="text" value={editingUpcomingRaceData.distance} onChange={e => setEditingUpcomingRaceData({...editingUpcomingRaceData, distance: e.target.value})} placeholder="Custom" className="w-full bg-white dark:bg-gray-600 p-2 rounded border-slate-300 dark:border-gray-500"/>}
+                                                                </div>
+                                                                <input type="text" value={editingUpcomingRaceData.goalTime} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, goalTime: e.target.value})} placeholder="Goal Time" className="col-span-2 w-full bg-white dark:bg-gray-600 p-2 rounded border-slate-300 dark:border-gray-500"/>
+                                                                <div className="relative col-span-2">
+                                                                    <input type="date" value={editingUpcomingRaceData.date} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, date: e.target.value})} className={`w-full bg-white dark:bg-gray-600 p-2 rounded border-slate-300 dark:border-gray-500 ${!editingUpcomingRaceData.date ? 'text-slate-400' : 'dark:text-white'}`}/>
+                                                                </div>
                                                             </div>
-                                                            <input type="text" value={editingUpcomingRaceData.goalTime} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, goalTime: e.target.value})} placeholder="Goal Time" className="col-span-2 w-full bg-white dark:bg-gray-600 p-2 rounded border-slate-300 dark:border-gray-500"/>
-                                                            <div className="relative col-span-2">
-                                                                <input type="date" value={editingUpcomingRaceData.date} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, date: e.target.value})} className={`w-full bg-white dark:bg-gray-600 p-2 rounded border-slate-300 dark:border-gray-500 ${!editingUpcomingRaceData.date ? 'text-slate-400' : 'dark:text-white'}`}/>
+                                                            <div className="relative">
+                                                                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
+                                                                <input type="url" placeholder="Race Website Link (Optional)" value={editingUpcomingRaceData.link} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, link: e.target.value})} className="w-full bg-white dark:bg-gray-600 p-2 rounded border-slate-300 dark:border-gray-500 pl-10"/>
+                                                            </div>
+                                                            <textarea value={editingUpcomingRaceData.info} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, info: e.target.value})} className="w-full bg-white dark:bg-gray-600 p-2 rounded h-20 border-slate-300 dark:border-gray-500"/>
+                                                            <div className="flex justify-end gap-2">
+                                                                <button onClick={() => handleSaveUpcomingRace(race.id)} className="p-2 rounded-full text-white bg-green-500 hover:bg-green-600"><Save size={18}/></button>
+                                                                <button onClick={() => setEditingUpcomingRaceId(null)} className="p-2 rounded-full text-slate-600 bg-slate-200 hover:bg-slate-300"><X size={18}/></button>
                                                             </div>
                                                         </div>
-                                                        <div className="relative">
-                                                            <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
-                                                            <input type="url" placeholder="Race Website Link (Optional)" value={editingUpcomingRaceData.link} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, link: e.target.value})} className="w-full bg-white dark:bg-gray-600 p-2 rounded border-slate-300 dark:border-gray-500 pl-10"/>
-                                                        </div>
-                                                        <textarea value={editingUpcomingRaceData.info} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, info: e.target.value})} className="w-full bg-white dark:bg-gray-600 p-2 rounded h-20 border-slate-300 dark:border-gray-500"/>
-                                                        <div className="flex justify-end gap-2">
-                                                            <button onClick={() => handleSaveUpcomingRace(race.id)} className="p-2 rounded-full text-white bg-green-500 hover:bg-green-600"><Save size={18}/></button>
-                                                            <button onClick={() => setEditingUpcomingRaceId(null)} className="p-2 rounded-full text-slate-600 bg-slate-200 hover:bg-slate-300"><X size={18}/></button>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="p-4">
-                                                        <div className="flex justify-between items-start gap-4">
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className="font-bold text-lg text-slate-800 dark:text-slate-100 truncate">{race.name}</p>
-                                                                <p className="sm:col-span-2 flex items-center text-sm text-slate-500 dark:text-slate-400 mt-1"><Calendar size={14} className="mr-2 text-indigo-500 dark:text-indigo-400"/>{race.date ? new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : 'Date TBD'}</p>
+                                                    ) : (
+                                                        <div className="p-4">
+                                                            <div className="flex justify-between items-start gap-4">
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="font-bold text-lg text-slate-800 dark:text-slate-100 truncate">{race.name}</p>
+                                                                    <p className="sm:col-span-2 flex items-center text-sm text-slate-500 dark:text-slate-400 mt-1"><Calendar size={14} className="mr-2 text-indigo-500 dark:text-indigo-400"/>{race.date ? new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : 'Date TBD'}</p>
+                                                                </div>
+                                                                <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                                                                    <button onClick={() => handleInitiateShare(race, 'upcoming')} className="text-slate-400 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-gray-600"><Share2 size={18}/></button>
+                                                                    {race.link && <a href={race.link} target="_blank" rel="noopener noreferrer" className="text-slate-400 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-gray-600" aria-label="Race Website"><LinkIcon size={18}/></a>}
+                                                                    <button onClick={() => handleStartEditUpcomingRace(race)} className="text-slate-400 dark:text-slate-400 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors p-2 rounded-full hover:bg-yellow-50 dark:hover:bg-yellow-500/20"><Edit size={18}/></button>
+                                                                    <button onClick={() => handleDeleteRace(race.id, 'upcomingRaces')} className="text-slate-400 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-500/20"><Trash2 size={18}/></button>
+                                                                </div>
                                                             </div>
-                                                            <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                                                                <button onClick={() => handleInitiateShare(race, 'upcoming')} className="text-slate-400 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-gray-600"><Share2 size={18}/></button>
-                                                                {race.link && <a href={race.link} target="_blank" rel="noopener noreferrer" className="text-slate-400 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-gray-600" aria-label="Race Website"><LinkIcon size={18}/></a>}
-                                                                <button onClick={() => handleStartEditUpcomingRace(race)} className="text-slate-400 dark:text-slate-400 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors p-2 rounded-full hover:bg-yellow-50 dark:hover:bg-yellow-500/20"><Edit size={18}/></button>
-                                                                <button onClick={() => handleDeleteRace(race.id, 'upcomingRaces')} className="text-slate-400 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-500/20"><Trash2 size={18}/></button>
+                                                            <div className="mt-4 pt-4 border-t border-slate-200 dark:border-gray-700 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-slate-600 dark:text-slate-300 text-sm">
+                                                                <p className="flex items-center"><Flag size={16} className="mr-2 text-indigo-500 dark:text-indigo-400"/><strong>Distance:</strong><span className="ml-2">{race.distance || 'N/A'}</span></p>
+                                                                <p className="flex items-center"><Target size={16} className="mr-2 text-indigo-500 dark:text-indigo-400"/><strong>Goal:</strong><span className="ml-2">{race.goalTime || 'N/A'}</span></p>
+                                                                {race.info && <p className="col-span-full flex items-start mt-1"><Info size={16} className="mr-2 text-indigo-500 dark:text-indigo-400 mt-0.5 flex-shrink-0"/><strong>Info:</strong><span className="ml-2">{race.info}</span></p>}
                                                             </div>
                                                         </div>
-                                                        <div className="mt-4 pt-4 border-t border-slate-200 dark:border-gray-700 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-slate-600 dark:text-slate-300 text-sm">
-                                                            <p className="flex items-center"><Flag size={16} className="mr-2 text-indigo-500 dark:text-indigo-400"/><strong>Distance:</strong><span className="ml-2">{race.distance || 'N/A'}</span></p>
-                                                            <p className="flex items-center"><Target size={16} className="mr-2 text-indigo-500 dark:text-indigo-400"/><strong>Goal:</strong><span className="ml-2">{race.goalTime || 'N/A'}</span></p>
-                                                            {race.info && <p className="col-span-full flex items-start mt-1"><Info size={16} className="mr-2 text-indigo-500 dark:text-indigo-400 mt-0.5 flex-shrink-0"/><strong>Info:</strong><span className="ml-2">{race.info}</span></p>}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}) : <p className="text-slate-400 dark:text-slate-500 text-center py-8">No upcoming races planned.</p>}
-                                 </div>
-                            </section>
-                        </main>
-                    </>
-                ) : (
-                    <div className="text-center py-20">
-                        <h2 className="text-2xl font-bold text-slate-700">Welcome to Benedict Runs!</h2>
-                        <p className="text-slate-500 mt-2">Please log in or sign up to track your races.</p>
-                    </div>
-                )}
-            </div>
+                                                    )}
+                                                </div>
+                                            )}) : <p className="text-slate-400 dark:text-slate-500 text-center py-8">No upcoming races planned.</p>}
+                                     </div>
+                                </section>
+                            </main>
+                        </>
+                    ) : (
+                        <div className="text-center py-20">
+                            <h2 className="text-2xl font-bold text-slate-700">Welcome to Benedict Runs!</h2>
+                            <p className="text-slate-500 mt-2">Please log in or sign up to track your races.</p>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
