@@ -898,6 +898,10 @@ function SignUpModal({ onClose, onSwitch }) {
             const userCredential = await createUserWithEmailAndPassword(auth, emailForAuth, password);
             const user = userCredential.user;
 
+            // Close the modal as soon as the account is created
+            onClose();
+
+            // Then, create the profile document in the background
             await setDoc(doc(db, `artifacts/${appId}/users/${user.uid}/profile`, "data"), {
                 name: name,
                 username: username,
@@ -905,7 +909,6 @@ function SignUpModal({ onClose, onSwitch }) {
                 createdAt: new Date(),
             });
 
-            onClose(); 
         } catch (authError) {
             if (authError.code === 'auth/email-already-in-use') {
                 setError("Username is already taken. Please choose another one.");
