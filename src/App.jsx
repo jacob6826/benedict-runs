@@ -24,7 +24,7 @@ import {
     setLogLevel, 
     orderBy
 } from 'firebase/firestore';
-import { Clock, Flag, Plus, Trash2, Edit, Save, X, Target, Info, Calendar, Link as LinkIcon, User, LogOut, Award, Download, CheckSquare, Share2, ClipboardCopy, Moon, Sun, Gauge, BarChart2, Route } from 'lucide-react';
+import { Clock, Flag, Plus, Trash2, Edit, Save, X, Target, Info, Calendar, Link as LinkIcon, User, LogOut, Award, Download, CheckSquare, Share2, ClipboardCopy, Moon, Sun, Gauge, BarChart2, ChevronDown } from 'lucide-react';
 
 // --- Firebase Configuration ---
 const firebaseConfig = {
@@ -901,111 +901,109 @@ function PersonalRecords({ records }) {
 // --- Stats Component ---
 function Stats({ completedRaces }) {
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [openDistance, setOpenDistance] = useState(null);
+
+    const handleToggle = (distance) => {
+        setOpenDistance(prev => prev === distance ? null : distance);
+    };
 
     const availableYears = useMemo(() => {
+        if (!completedRaces || completedRaces.length === 0) return [new Date().getFullYear()];
         const years = new Set(completedRaces.map(race => new Date(race.date + 'T00:00:00').getFullYear()));
+        const currentYear = new Date().getFullYear();
+        years.add(currentYear);
         return Array.from(years).sort((a, b) => b - a);
     }, [completedRaces]);
 
     const yearStats = useMemo(() => {
         const racesInYear = completedRaces.filter(race => new Date(race.date + 'T00:00:00').getFullYear() === selectedYear);
         
-        const totalMiles = racesInYear.reduce((sum, race) => sum + distanceToMiles(race.distance), 0);
-
-        const statsByDistance = racesInYear.reduce((acc, race) => {
+        const racesByDistance = racesInYear.reduce((acc, race) => {
             const distance = race.distance || 'N/A';
             if (!acc[distance]) {
-                acc[distance] = { count: 0, bestTime: 'N/A', bestTimeInSeconds: Infinity };
+                acc[distance] = [];
             }
-            acc[distance].count++;
-            const currentTimeInSeconds = timeToSeconds(race.time);
-            if (currentTimeInSeconds < acc[distance].bestTimeInSeconds) {
-                acc[distance].bestTime = race.time;
-                acc[distance].bestTimeInSeconds = currentTimeInSeconds;
-            }
+            acc[distance].push(race);
             return acc;
         }, {});
 
-        return {
-            racesInYear,
-            totalRaces: racesInYear.length,
-            totalMiles: totalMiles.toFixed(2),
-            statsByDistance: Object.entries(statsByDistance).sort((a, b) => b[1].count - a[1].count)
-        };
+        const yearBests = {};
+        STANDARD_DISTANCES.forEach(distance => {
+            const relevantRaces = racesInYear.filter(r => r.distance === distance);
+            if(relevantRaces.length > 0) {
+                const bestRace = relevantRaces.reduce((best, current) => 
+                    timeToSeconds(current.time) < timeToSeconds(best.time) ? current : best
+                );
+                yearBests[distance] = { time: bestRace.time };
+            } else {
+                 yearBests[distance] = { time: 'N/A' };
+            }
+        });
+        
+        return { racesByDistance, yearBests };
 
     }, [completedRaces, selectedYear]);
 
     if (completedRaces.length === 0) {
-        return null; // Don't render anything if there are no races
+        return null; // Don't render anything if there are no races ever
     }
 
     return (
         <section className="bg-white dark:bg-gray-800/50 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-gray-700 mt-10">
-            <div className="flex justify-between items-center mb-5">
+            <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold flex items-center">
-                    <BarChart2 className="mr-3 text-indigo-500 dark:text-indigo-400" />Year in Review
+                    <BarChart2 className="mr-3 text-indigo-500 dark:text-indigo-400" />Stats
                 </h2>
-                {availableYears.length > 0 && (
-                    <select 
-                        value={selectedYear} 
-                        onChange={(e) => setSelectedYear(Number(e.target.value))}
-                        className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit rounded-lg px-4 py-2 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    >
-                        {availableYears.map(year => <option key={year} value={year}>{year}</option>)}
-                    </select>
-                )}
+                <select 
+                    value={selectedYear} 
+                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                    className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit rounded-lg px-4 py-2 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                    {availableYears.map(year => <option key={year} value={year}>{year}</option>)}
+                </select>
             </div>
 
-            {yearStats.totalRaces > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Summary Cards */}
-                    <div className="col-span-1 md:col-span-3 grid grid-cols-2 gap-4 text-center">
-                        <div className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg">
-                            <p className="text-sm text-slate-500 dark:text-slate-400">Total Races</p>
-                            <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{yearStats.totalRaces}</p>
-                        </div>
-                         <div className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg">
-                            <p className="text-sm text-slate-500 dark:text-slate-400">Total Miles</p>
-                            <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{yearStats.totalMiles}</p>
-                        </div>
+            {Object.keys(yearStats.racesByDistance).length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Left Column: Accordion List */}
+                    <div className="space-y-2">
+                        {Object.entries(yearStats.racesByDistance).map(([distance, races]) => (
+                            <div key={distance} className="border-b border-slate-200 dark:border-gray-700 last:border-b-0">
+                                <button onClick={() => handleToggle(distance)} className="w-full flex justify-between items-center p-3 hover:bg-slate-50 dark:hover:bg-gray-700/50 rounded-lg">
+                                    <span className="font-bold">{distance}</span>
+                                    <div className="flex items-center gap-4">
+                                        <span className="text-sm text-slate-500 dark:text-slate-400">{races.length} race{races.length > 1 ? 's' : ''}</span>
+                                        <ChevronDown className={`transform transition-transform duration-200 ${openDistance === distance ? 'rotate-180' : ''}`} size={20} />
+                                    </div>
+                                </button>
+                                {openDistance === distance && (
+                                    <ul className="pl-4 pr-2 py-2 space-y-2">
+                                        {races.map(race => (
+                                            <li key={race.id} className="flex justify-between items-center text-sm p-2 bg-slate-100 dark:bg-gray-700 rounded-md">
+                                                <div>
+                                                    <p className="font-semibold">{race.name}</p>
+                                                    <p className="text-xs text-slate-400">{new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                                </div>
+                                                <p className="font-mono">{race.time}</p>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
+                        ))}
                     </div>
                     
-                    {/* Distance Breakdown */}
-                    <div className="md:col-span-2">
-                         <h3 className="font-bold mb-3 text-lg">Distance Breakdown</h3>
-                         <div className="overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead className="bg-slate-50 dark:bg-gray-700/50 text-xs text-slate-500 dark:text-slate-400 uppercase">
-                                    <tr>
-                                        <th className="px-4 py-2">Distance</th>
-                                        <th className="px-4 py-2">Count</th>
-                                        <th className="px-4 py-2">Best Time</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {yearStats.statsByDistance.map(([distance, stats]) => (
-                                        <tr key={distance} className="border-b border-slate-100 dark:border-gray-700">
-                                            <td className="px-4 py-3 font-semibold">{distance}</td>
-                                            <td className="px-4 py-3">{stats.count}</td>
-                                            <td className="px-4 py-3">{stats.bestTime}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    {/* Race List */}
+                    {/* Right Column: Year Best Grid */}
                     <div>
-                        <h3 className="font-bold mb-3 text-lg">Races Run</h3>
-                        <ul className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                           {yearStats.racesInYear.map(race => (
-                               <li key={race.id} className="text-sm p-2 bg-slate-50 dark:bg-gray-700/50 rounded-md">
-                                   <p className="font-semibold truncate">{race.name}</p>
-                                   <p className="text-xs text-slate-400">{new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
-                               </li>
-                           ))}
-                        </ul>
+                        <h3 className="font-bold mb-3 text-lg text-center">Best Times in {selectedYear}</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            {STANDARD_DISTANCES.map(distance => (
+                                <div key={distance} className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center">
+                                    <h4 className="font-bold text-indigo-600 dark:text-indigo-400">{distance}</h4>
+                                    <p className="text-2xl font-semibold mt-2">{yearStats.yearBests[distance].time}</p>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             ) : (
@@ -1014,7 +1012,6 @@ function Stats({ completedRaces }) {
         </section>
     );
 }
-
 
 // --- Authentication Modals ---
 function NewPRModal({ race, onClose }) {
@@ -1274,4 +1271,4 @@ function UpdateInfoModal({ userProfile, onClose, onUpdate }) {
             </form>
         </div>
     );
-} 
+}
