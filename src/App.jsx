@@ -24,7 +24,7 @@ import {
     setLogLevel, 
     orderBy
 } from 'firebase/firestore';
-import { Clock, Flag, Plus, Trash2, Edit, Save, X, Target, Info, Calendar, Link as LinkIcon, User, LogOut, Award, Download, CheckSquare, Share2, ClipboardCopy, Moon, Sun, Gauge, BarChart2, ChevronDown, Milestone } from 'lucide-react';
+import { Clock, Flag, Plus, Trash2, Edit, Save, X, Target, Info, Calendar, Link as LinkIcon, User, LogOut, Award, Download, CheckSquare, Share2, ClipboardCopy, Moon, Sun, Gauge, BarChart2, ChevronDown, Milestone, TrendingDown } from 'lucide-react';
 
 // --- Firebase Configuration ---
 const firebaseConfig = {
@@ -97,6 +97,22 @@ const formatPace = (time, distance) => {
     const paceSeconds = Math.round(secondsPerMile % 60);
     
     return `${paceMinutes}:${paceSeconds.toString().padStart(2, '0')}`;
+};
+
+const formatSeconds = (totalSeconds) => {
+    if (totalSeconds <= 0 || !isFinite(totalSeconds)) return null;
+    
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = Math.round(totalSeconds % 60);
+
+    const paddedMinutes = minutes.toString().padStart(2, '0');
+    const paddedSeconds = seconds.toString().padStart(2, '0');
+
+    if (hours > 0) {
+        return `${hours}:${paddedMinutes}:${paddedSeconds}`;
+    }
+    return `${minutes}:${paddedSeconds}`;
 };
 
 const STANDARD_DISTANCES = ["5k", "10k", "1/2 Marathon", "Marathon"];
@@ -915,16 +931,26 @@ function Stats({ completedRaces }) {
             return acc;
         }, {});
 
-        const yearBests = {};
+        const distanceStats = {};
         STANDARD_DISTANCES.forEach(distance => {
             const relevantRaces = filteredRaces.filter(r => r.distance === distance);
-            if(relevantRaces.length > 0) {
-                const bestRace = relevantRaces.reduce((best, current) => 
-                    timeToSeconds(current.time) < timeToSeconds(best.time) ? current : best
-                );
-                yearBests[distance] = { time: bestRace.time, distance: bestRace.distance };
+            
+            if (relevantRaces.length > 0) {
+                const sortedByTime = [...relevantRaces].sort((a, b) => timeToSeconds(a.time) - timeToSeconds(b.time));
+                const bestRace = sortedByTime[0];
+                let improvement = null;
+
+                if (relevantRaces.length > 1) {
+                    const worstRace = sortedByTime[sortedByTime.length - 1];
+                    const improvementInSeconds = timeToSeconds(worstRace.time) - timeToSeconds(bestRace.time);
+                    if (improvementInSeconds > 0) {
+                        improvement = formatSeconds(improvementInSeconds);
+                    }
+                }
+                
+                distanceStats[distance] = { bestTime: bestRace.time, distance: bestRace.distance, improvement };
             } else {
-                 yearBests[distance] = { time: 'N/A', distance: null };
+                 distanceStats[distance] = { bestTime: 'N/A', distance: null, improvement: null };
             }
         });
         
@@ -935,7 +961,7 @@ function Stats({ completedRaces }) {
 
         return { 
             racesByDistance: Object.entries(racesByDistance).sort((a,b) => b[1].length - a[1].length), 
-            yearBests,
+            distanceStats,
             totalRaces: filteredRaces.length,
             totalMiles: totalMiles.toFixed(2)
         };
@@ -1017,15 +1043,21 @@ function Stats({ completedRaces }) {
                             <h3 className="font-bold mb-3 text-lg text-center">Best Times in {selectedYear === 'All' ? 'All Time' : selectedYear}</h3>
                             <div className="grid grid-cols-2 gap-4">
                                 {STANDARD_DISTANCES.map(distance => {
-                                    const record = yearStats.yearBests[distance];
+                                    const record = yearStats.distanceStats[distance];
                                     return (
                                     <div key={distance} className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center">
                                         <h4 className="font-bold text-indigo-600 dark:text-indigo-400">{distance}</h4>
-                                        <p className="text-2xl font-semibold mt-2">{record.time}</p>
-                                        {record.time !== 'N/A' && (
-                                            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-                                                {formatPace(record.time, record.distance)} / mi
+                                        <p className="text-2xl font-semibold mt-2">{record.bestTime}</p>
+                                        {record.bestTime !== 'N/A' && (
+                                            <p className="text-slate-500 dark:text-slate-400 text-sm">
+                                                {formatPace(record.bestTime, record.distance)} / mi
                                             </p>
+                                        )}
+                                        {record.improvement && (
+                                            <div className="flex items-center justify-center gap-1 text-sm text-green-500 mt-2">
+                                                <TrendingDown size={14} />
+                                                <span>-{record.improvement}</span>
+                                            </div>
                                         )}
                                     </div>
                                 )})}
