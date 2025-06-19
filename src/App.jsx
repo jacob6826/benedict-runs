@@ -24,7 +24,7 @@ import {
     setLogLevel, 
     orderBy
 } from 'firebase/firestore';
-import { Clock, Flag, Plus, Trash2, Edit, Save, X, Target, Info, Calendar, Link as LinkIcon, User, LogOut, Award, Download, CheckSquare, Share2, ClipboardCopy, Moon, Sun, Gauge, BarChart2, ChevronDown, Route } from 'lucide-react';
+import { Clock, Flag, Plus, Trash2, Edit, Save, X, Target, Info, Calendar, Link as LinkIcon, User, LogOut, Award, Download, CheckSquare, Share2, ClipboardCopy, Moon, Sun, Gauge, BarChart2, ChevronDown } from 'lucide-react';
 
 // --- Firebase Configuration ---
 const firebaseConfig = {
@@ -905,8 +905,6 @@ function Stats({ completedRaces }) {
             ? completedRaces
             : completedRaces.filter(race => new Date(race.date + 'T00:00:00').getFullYear() === Number(selectedYear));
         
-        const totalMiles = filteredRaces.reduce((sum, race) => sum + distanceToMiles(race.distance), 0);
-        
         const racesByDistance = filteredRaces.reduce((acc, race) => {
             const distance = race.distance || 'N/A';
             if (!acc[distance]) {
@@ -936,9 +934,7 @@ function Stats({ completedRaces }) {
 
         return { 
             racesByDistance: Object.entries(racesByDistance).sort((a,b) => b[1].length - a[1].length), 
-            yearBests,
-            totalRaces: filteredRaces.length,
-            totalMiles: totalMiles.toFixed(2)
+            yearBests 
         };
 
     }, [completedRaces, selectedYear]);
@@ -963,77 +959,59 @@ function Stats({ completedRaces }) {
                 </select>
             </div>
 
-            {yearStats.totalRaces > 0 ? (
-                <>
-                    <div className="grid grid-cols-2 gap-4 mb-8">
-                         <div className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center">
-                            <div className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                                <Flag size={16} />
-                                <span>Total Races</span>
+            {yearStats.racesByDistance.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Left Column: Accordion List */}
+                    <div className="space-y-2">
+                        {yearStats.racesByDistance.map(([distance, races]) => (
+                            <div key={distance} className="border-b border-slate-200 dark:border-gray-700 last:border-b-0">
+                                <button onClick={() => handleToggle(distance)} className="w-full flex justify-between items-center p-3 hover:bg-slate-50 dark:hover:bg-gray-700/50 rounded-lg">
+                                    <span className="font-bold">{distance}</span>
+                                    <div className="flex items-center gap-4">
+                                        <span className="text-sm text-slate-500 dark:text-slate-400">{races.length} race{races.length > 1 ? 's' : ''}</span>
+                                        <ChevronDown className={`transform transition-transform duration-200 ${openDistance === distance ? 'rotate-180' : ''}`} size={20} />
+                                    </div>
+                                </button>
+                                {openDistance === distance && (
+                                    <ul className="pl-4 pr-2 py-2 space-y-2">
+                                        {races.map(race => (
+                                            <li key={race.id} className="flex justify-between items-center text-sm p-2 bg-slate-100 dark:bg-gray-700 rounded-md">
+                                                <div>
+                                                    <p className="font-semibold">{race.name}</p>
+                                                    <p className="text-xs text-slate-400">{new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="font-mono">{race.time}</p>
+                                                    <p className="font-mono text-xs text-slate-400">{formatPace(race.time, race.distance)}/mi</p>
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
                             </div>
-                            <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">{yearStats.totalRaces}</p>
-                        </div>
-                         <div className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center">
-                            <div className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                                <Route size={16} />
-                                <span>Total Miles</span>
-                            </div>
-                            <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">{yearStats.totalMiles}</p>
-                        </div>
+                        ))}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {/* Left Column: Accordion List */}
-                        <div className="space-y-2">
-                            {yearStats.racesByDistance.map(([distance, races]) => (
-                                <div key={distance} className="border-b border-slate-200 dark:border-gray-700 last:border-b-0">
-                                    <button onClick={() => handleToggle(distance)} className="w-full flex justify-between items-center p-3 hover:bg-slate-50 dark:hover:bg-gray-700/50 rounded-lg">
-                                        <span className="font-bold">{distance}</span>
-                                        <div className="flex items-center gap-4">
-                                            <span className="text-sm text-slate-500 dark:text-slate-400">{races.length} race{races.length > 1 ? 's' : ''}</span>
-                                            <ChevronDown className={`transform transition-transform duration-200 ${openDistance === distance ? 'rotate-180' : ''}`} size={20} />
-                                        </div>
-                                    </button>
-                                    {openDistance === distance && (
-                                        <ul className="pl-4 pr-2 py-2 space-y-2">
-                                            {races.map(race => (
-                                                <li key={race.id} className="flex justify-between items-center text-sm p-2 bg-slate-100 dark:bg-gray-700 rounded-md">
-                                                    <div>
-                                                        <p className="font-semibold">{race.name}</p>
-                                                        <p className="text-xs text-slate-400">{new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <p className="font-mono">{race.time}</p>
-                                                        <p className="font-mono text-xs text-slate-400">{formatPace(race.time, race.distance)}/mi</p>
-                                                    </div>
-                                                </li>
-                                            ))}
-                                        </ul>
+                    
+                    {/* Right Column: Year Best Grid */}
+                    <div>
+                        <h3 className="font-bold mb-3 text-lg text-center">Best Times in {selectedYear === 'All' ? 'All Time' : selectedYear}</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            {STANDARD_DISTANCES.map(distance => {
+                                const record = yearStats.yearBests[distance];
+                                return (
+                                <div key={distance} className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center">
+                                    <h4 className="font-bold text-indigo-600 dark:text-indigo-400">{distance}</h4>
+                                    <p className="text-2xl font-semibold mt-2">{record.time}</p>
+                                    {record.time !== 'N/A' && (
+                                        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                                            {formatPace(record.time, record.distance)} / mi
+                                        </p>
                                     )}
                                 </div>
-                            ))}
-                        </div>
-                        
-                        {/* Right Column: Year Best Grid */}
-                        <div>
-                            <h3 className="font-bold mb-3 text-lg text-center">Best Times in {selectedYear === 'All' ? 'All Time' : selectedYear}</h3>
-                            <div className="grid grid-cols-2 gap-4">
-                                {STANDARD_DISTANCES.map(distance => {
-                                    const record = yearStats.yearBests[distance];
-                                    return (
-                                    <div key={distance} className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center">
-                                        <h4 className="font-bold text-indigo-600 dark:text-indigo-400">{distance}</h4>
-                                        <p className="text-2xl font-semibold mt-2">{record.time}</p>
-                                        {record.time !== 'N/A' && (
-                                            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-                                                {formatPace(record.time, record.distance)} / mi
-                                            </p>
-                                        )}
-                                    </div>
-                                )})}
-                            </div>
+                            )})}
                         </div>
                     </div>
-                </>
+                </div>
             ) : (
                 <p className="text-slate-400 dark:text-slate-500 text-center py-8">No races completed in {selectedYear}.</p>
             )}
@@ -1300,4 +1278,4 @@ function UpdateInfoModal({ userProfile, onClose, onUpdate }) {
             </form>
         </div>
     );
-} 
+}
