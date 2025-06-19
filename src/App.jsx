@@ -677,7 +677,7 @@ export default function App() {
                                                 type="date" 
                                                 value={newRaceDate} 
                                                 onChange={(e) => setNewRaceDate(e.target.value)} 
-                                                className={`w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-3 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 
+                                                className={`w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 
                                                             ${!newRaceDate ? 'text-slate-400' : 'text-slate-800 dark:text-white'}`}
                                             />
                                             {!newRaceDate && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">Date</span>}
@@ -750,7 +750,7 @@ export default function App() {
                                                 type="date" 
                                                 value={newUpcomingRace.date} 
                                                 onChange={(e) => setNewUpcomingRace({...newUpcomingRace, date: e.target.value})}
-                                                className={`w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-3 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500
+                                                className={`w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500
                                                             ${!newUpcomingRace.date ? 'text-slate-400' : 'text-slate-800 dark:text-white'}`}
                                             />
                                             {!newUpcomingRace.date && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">Date</span>}
@@ -798,10 +798,10 @@ export default function App() {
                                                                         type="date" 
                                                                         value={editingUpcomingRaceData.date} 
                                                                         onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, date: e.target.value})} 
-                                                                        className={`w-full bg-white dark:bg-gray-600 p-2 rounded border-slate-300 dark:border-gray-500
+                                                                        className={`w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 p-2.5 px-4 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500
                                                                                     ${!editingUpcomingRaceData.date ? 'text-slate-400' : 'dark:text-white'}`}
                                                                     />
-                                                                    {!editingUpcomingRaceData.date && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">Date</span>}
+                                                                    {!editingUpcomingRaceData.date && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">Date</span>}
                                                                 </div>
                                                             </div>
                                                             <div className="relative">
