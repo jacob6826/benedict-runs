@@ -954,7 +954,6 @@ function Stats({ completedRaces }) {
             }
         });
         
-        // Sort races within each distance group by date
         for (const distance in racesByDistance) {
             racesByDistance[distance].sort((a, b) => new Date(b.date) - new Date(a.date));
         }
@@ -1045,20 +1044,24 @@ function Stats({ completedRaces }) {
                                 {STANDARD_DISTANCES.map(distance => {
                                     const record = yearStats.distanceStats[distance];
                                     return (
-                                    <div key={distance} className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center">
-                                        <h4 className="font-bold text-indigo-600 dark:text-indigo-400">{distance}</h4>
-                                        <p className="text-2xl font-semibold mt-2">{record.bestTime}</p>
-                                        {record.bestTime !== 'N/A' && (
-                                            <p className="text-slate-500 dark:text-slate-400 text-sm">
-                                                {formatPace(record.bestTime, record.distance)} / mi
-                                            </p>
-                                        )}
-                                        {record.improvement && (
-                                            <div className="flex items-center justify-center gap-1 text-sm text-green-500 mt-2">
-                                                <TrendingDown size={14} />
-                                                <span>-{record.improvement}</span>
-                                            </div>
-                                        )}
+                                    <div key={distance} className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center flex flex-col justify-between">
+                                        <div>
+                                            <h4 className="font-bold text-indigo-600 dark:text-indigo-400">{distance}</h4>
+                                            <p className="text-2xl font-semibold mt-2">{record.bestTime}</p>
+                                            {record.bestTime !== 'N/A' && (
+                                                <p className="text-slate-500 dark:text-slate-400 text-sm">
+                                                    {formatPace(record.bestTime, record.distance)} / mi
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="h-7 mt-2">
+                                            {record.improvement && (
+                                                <div className="flex items-center justify-center gap-1 text-sm text-green-500">
+                                                    <TrendingDown size={14} />
+                                                    <span className="font-semibold">Improvement: -{record.improvement}</span>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 )})}
                             </div>
@@ -1331,4 +1334,4 @@ function UpdateInfoModal({ userProfile, onClose, onUpdate }) {
             </form>
         </div>
     );
-} 
+}
