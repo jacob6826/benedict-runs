@@ -680,7 +680,7 @@ export default function App() {
                                                 id="newRaceDate"
                                                 value={newRaceDate} 
                                                 onChange={(e) => setNewRaceDate(e.target.value)} 
-                                                className="appearance-none block px-4 py-2.5 w-full text-sm text-slate-800 dark:text-white bg-slate-100 dark:bg-gray-700 rounded-lg border border-slate-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 peer"
+                                                className="appearance-none block w-full bg-slate-100 dark:bg-gray-700 rounded-lg border border-slate-300 dark:border-gray-600 px-4 py-2.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 peer"
                                                 placeholder=" "
                                             />
                                             <label htmlFor="newRaceDate" className="absolute text-sm text-slate-400 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] start-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Date</label>
@@ -756,7 +756,7 @@ export default function App() {
                                                 id="newUpcomingRaceDate"
                                                 value={newUpcomingRace.date} 
                                                 onChange={(e) => setNewUpcomingRace({...newUpcomingRace, date: e.target.value})}
-                                                className="appearance-none block px-4 py-2.5 w-full text-sm text-slate-800 dark:text-white bg-slate-100 dark:bg-gray-700 rounded-lg border border-slate-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 peer"
+                                                className="appearance-none block w-full bg-slate-100 dark:bg-gray-700 rounded-lg border border-slate-300 dark:border-gray-600 px-4 py-2.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 peer"
                                                 placeholder=" "
                                             />
                                             <label htmlFor="newUpcomingRaceDate" className="absolute text-sm text-slate-400 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] start-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Date</label>
@@ -807,7 +807,7 @@ export default function App() {
                                                                         id="editingDate" 
                                                                         value={editingUpcomingRaceData.date} 
                                                                         onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, date: e.target.value})} 
-                                                                        className="appearance-none block w-full px-4 py-2.5 text-sm bg-slate-100 dark:bg-gray-700 text-slate-800 dark:text-white rounded-lg border border-slate-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 peer"
+                                                                        className="appearance-none block w-full bg-slate-100 dark:bg-gray-700 rounded-lg border border-slate-300 dark:border-gray-600 px-4 py-2.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 peer"
                                                                         placeholder=" "
                                                                     />
                                                                      <label htmlFor="editingDate" className="absolute text-sm text-slate-400 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] start-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Date</label>
