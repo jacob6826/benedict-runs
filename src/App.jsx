@@ -19,25 +19,25 @@ import {
     setDoc,
     getDoc,
     query,
-    orderBy,
+    where,
     getDocs,
-    setLogLevel 
+    setLogLevel, 
+    orderBy
 } from 'firebase/firestore';
 import { Clock, Flag, Plus, Trash2, Edit, Save, X, Target, Info, Calendar, Link as LinkIcon, User, LogOut, Award, Download, CheckSquare, Share2, ClipboardCopy, Moon, Sun } from 'lucide-react';
 
 // --- Firebase Configuration ---
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID
-};
-
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
+    };
 
 // --- App ID ---
-const appId = 'benedict-runs'; // Hardcoded for deployment
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'benedict-runs-default';
 
 // --- Initialize Firebase ---
 const app = initializeApp(firebaseConfig);
@@ -135,16 +135,21 @@ export default function App() {
     const [completionTime, setCompletionTime] = useState('');
     const [completionNotes, setCompletionNotes] = useState('');
 
-    // Form States
-    const [newHistoryRace, setNewHistoryRace] = useState({ name: '', time: '', date: '', link: '', notes: '', distance: '5k' });
+    // Completed Races State
+    const [completedRaces, setCompletedRaces] = useState([]);
+    const [personalRecords, setPersonalRecords] = useState({});
+    const [newRaceName, setNewRaceName] = useState('');
+    const [newRaceTime, setNewRaceTime] = useState('');
+    const [newRaceDate, setNewRaceDate] = useState('');
+    const [newRaceLink, setNewRaceLink] = useState('');
+    const [newRaceNotes, setNewRaceNotes] = useState('');
+    const [newRaceDistance, setNewRaceDistance] = useState('5k');
     const [showCustomHistoryDistance, setShowCustomHistoryDistance] = useState(false);
+    
+    // Upcoming Races State
+    const [upcomingRaces, setUpcomingRaces] = useState([]);
     const [newUpcomingRace, setNewUpcomingRace] = useState({ name: '', date: '', distance: '5k', goalTime: '', link: '', info: '' });
     const [showCustomUpcomingDistance, setShowCustomUpcomingDistance] = useState(false);
-    
-    // Data States
-    const [completedRaces, setCompletedRaces] = useState([]);
-    const [upcomingRaces, setUpcomingRaces] = useState([]);
-    const [personalRecords, setPersonalRecords] = useState({});
     
     const [editingUpcomingRaceId, setEditingUpcomingRaceId] = useState(null);
     const [editingUpcomingRaceData, setEditingUpcomingRaceData] = useState({ name: '', date: '', distance: '', goalTime: '', link: '', info: '' });
@@ -185,33 +190,6 @@ export default function App() {
         return () => unsubscribe();
     }, []);
     
-    // --- Firestore real-time listeners for races ---
-useEffect(() => {
-  if (currentUser) {
-    // Listen for completed races
-    const completedRef = collection(db, `artifacts/${appId}/users/${currentUser.uid}/completedRaces`);
-    const completedQ = query(completedRef, orderBy('date', 'desc'));
-    const unsubscribeCompleted = onSnapshot(completedQ, (snapshot) => {
-      setCompletedRaces(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
-    });
-
-    // Listen for upcoming races
-    const upcomingRef = collection(db, `artifacts/${appId}/users/${currentUser.uid}/upcomingRaces`);
-    const upcomingQ = query(upcomingRef, orderBy('date', 'asc'));
-    const unsubscribeUpcoming = onSnapshot(upcomingQ, (snapshot) => {
-      setUpcomingRaces(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
-    });
-
-    // Cleanup subscriptions on unmount or user change
-    return () => {
-      unsubscribeCompleted();
-      unsubscribeUpcoming();
-    };
-  } else {
-    setCompletedRaces([]);
-    setUpcomingRaces([]);
-  }
-}, [currentUser]);
     // --- Dark Mode Effect ---
     useEffect(() => {
         if (isDarkMode) {
@@ -257,8 +235,45 @@ useEffect(() => {
         
         if (completedRaces.length > 0) {
             calculatePRs();
+        } else {
+            setPersonalRecords({});
         }
     }, [completedRaces]);
+
+    // --- Firestore Real-time Listeners ---
+    useEffect(() => {
+        if (currentUser) {
+            const completedRacesRef = collection(db, `artifacts/${appId}/users/${currentUser.uid}/completedRaces`);
+            const q = query(completedRacesRef, orderBy('date', 'desc'));
+            
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                const races = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+                setCompletedRaces(races);
+            }, (error) => {
+                console.error("Error fetching completed races:", error);
+                showAndHideNotification("Could not load race history.");
+            });
+
+            return () => unsubscribe();
+        }
+    }, [currentUser]);
+
+    useEffect(() => {
+        if (currentUser) {
+            const upcomingRacesRef = collection(db, `artifacts/${appId}/users/${currentUser.uid}/upcomingRaces`);
+            const q = query(upcomingRacesRef, orderBy('date', 'asc'));
+            
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                const races = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+                setUpcomingRaces(races);
+            }, (error) => {
+                console.error("Error fetching upcoming races:", error);
+                showAndHideNotification("Could not load upcoming races.");
+            });
+
+            return () => unsubscribe();
+        }
+    }, [currentUser]);
 
     // --- Image Generation Effect ---
     useEffect(() => {
@@ -352,31 +367,46 @@ useEffect(() => {
         }
     };
 
-    const handleAddCompletedRace = async (e) => {
+    const handleAddCompletedRace = (e) => {
         e.preventDefault();
-        if (!newHistoryRace.name.trim() || !newHistoryRace.time.trim() || !newHistoryRace.date.trim() || !newHistoryRace.distance.trim()) return;
+        if (!newRaceName.trim() || !newRaceTime.trim() || !newRaceDate.trim() || !newRaceDistance.trim()) return;
         
-        const currentPR = personalRecords[newHistoryRace.distance];
-        const newTimeInSeconds = timeToSeconds(newHistoryRace.time);
+        const currentPR = personalRecords[newRaceDistance];
+        const newTimeInSeconds = timeToSeconds(newRaceTime);
         let isNewPR = false;
-        if (STANDARD_DISTANCES.includes(newHistoryRace.distance)) {
+        if (STANDARD_DISTANCES.includes(newRaceDistance)) {
             if (!currentPR || newTimeInSeconds < timeToSeconds(currentPR?.time)) {
                 isNewPR = true;
             }
         }
+
+        const newRace = {
+            name: newRaceName,
+            time: newRaceTime,
+            date: newRaceDate,
+            link: newRaceLink,
+            distance: newRaceDistance,
+            notes: newRaceNotes
+        };
         
-        try {
-            const docRef = await addDoc(collection(db, `artifacts/${appId}/users/${currentUser.uid}/completedRaces`), newHistoryRace);
-            if (isNewPR) {
-                setNewPRData({...newHistoryRace, id: docRef.id });
-                setShowPRModal(true);
-            }
-            setNewHistoryRace({ name: '', time: '', date: '', link: '', notes: '', distance: '5k' });
-            setShowCustomHistoryDistance(false);
-        } catch (error) {
-            console.error("Error adding completed race:", error);
-            showAndHideNotification("Error adding race to history.");
-        }
+        addDoc(collection(db, `artifacts/${appId}/users/${currentUser.uid}/completedRaces`), newRace)
+            .then(() => {
+                if (isNewPR) {
+                    setNewPRData(newRace);
+                    setShowPRModal(true);
+                }
+                setNewRaceName(''); 
+                setNewRaceTime(''); 
+                setNewRaceDate(''); 
+                setNewRaceLink(''); 
+                setNewRaceNotes(''); 
+                setNewRaceDistance('5k'); 
+                setShowCustomHistoryDistance(false);
+            })
+            .catch((error) => {
+                console.error("Error adding completed race:", error);
+                showAndHideNotification("Error adding race to history.");
+            });
     };
     
     const handleDeleteRace = async (id, collectionName) => {
@@ -388,18 +418,21 @@ useEffect(() => {
         }
     };
     
-    const handleAddUpcomingRace = async (e) => {
+    const handleAddUpcomingRace = (e) => {
         e.preventDefault();
         if (!newUpcomingRace.name.trim() || !newUpcomingRace.date.trim()) return;
         
-        try {
-            await addDoc(collection(db, `artifacts/${appId}/users/${currentUser.uid}/upcomingRaces`), newUpcomingRace);
-            setNewUpcomingRace({ name: '', date: '', distance: '5k', goalTime: '', link: '', info: '' });
-            setShowCustomUpcomingDistance(false);
-        } catch (error) {
-             console.error("Error adding upcoming race:", error);
-            showAndHideNotification("Error adding upcoming race.");
-        }
+        const raceData = { ...newUpcomingRace };
+
+        addDoc(collection(db, `artifacts/${appId}/users/${currentUser.uid}/upcomingRaces`), raceData)
+            .then(() => {
+                setNewUpcomingRace({ name: '', date: '', distance: '5k', goalTime: '', link: '', info: '' });
+                setShowCustomUpcomingDistance(false);
+            })
+            .catch((error) => {
+                console.error("Error adding upcoming race:", error);
+                showAndHideNotification("Error adding upcoming race.");
+            });
     };
     
     const handleStartEditUpcomingRace = (race) => {
@@ -451,13 +484,6 @@ useEffect(() => {
                 showAndHideNotification("Could not send password reset link.");
             });
     };
-    
-    const firstPastRaceId = useMemo(() => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); 
-        const pastRaces = upcomingRaces.filter(race => new Date(race.date) < today);
-        return pastRaces.length > 0 ? pastRaces[0].id : null;
-    }, [upcomingRaces]);
     
     // --- Render ---
     return (
@@ -557,32 +583,36 @@ useEffect(() => {
                             <section className="bg-white dark:bg-gray-800/50 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-gray-700">
                                 <h2 className="text-2xl font-bold mb-5 flex items-center"><Flag className="mr-3 text-indigo-500 dark:text-indigo-400" />Race History</h2>
                                 <form onSubmit={handleAddCompletedRace} className="mb-6 grid grid-cols-1 md:grid-cols-6 gap-4">
-                                   <input type="text" value={newHistoryRace.name} onChange={(e) => setNewHistoryRace({...newHistoryRace, name: e.target.value})} placeholder="Race Name" className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                   <input type="text" value={newRaceName} onChange={(e) => setNewRaceName(e.target.value)} placeholder="Race Name" className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                    
                                    <div className={`grid gap-2 md:col-span-2 ${showCustomHistoryDistance ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                                        <select value={showCustomHistoryDistance ? 'Custom' : newHistoryRace.distance} 
+                                        <select value={showCustomHistoryDistance ? 'Custom' : newRaceDistance} 
                                             onChange={e => {
-                                                const val = e.target.value;
-                                                setShowCustomHistoryDistance(val === 'Custom');
-                                                setNewHistoryRace({...newHistoryRace, distance: val === 'Custom' ? '' : val});
+                                                if (e.target.value === 'Custom') {
+                                                    setShowCustomHistoryDistance(true);
+                                                    setNewRaceDistance('');
+                                                } else {
+                                                    setShowCustomHistoryDistance(false);
+                                                    setNewRaceDistance(e.target.value);
+                                                }
                                             }}
                                             className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                             {STANDARD_DISTANCES.map(d => <option key={d} value={d}>{d}</option>)}
                                             <option value="Custom">Custom</option>
                                         </select>
-                                        {showCustomHistoryDistance && <input type="text" value={newHistoryRace.distance} onChange={e => setNewHistoryRace({...newHistoryRace, distance: e.target.value})} placeholder="Custom" className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>}
+                                        {showCustomHistoryDistance && <input type="text" value={newRaceDistance} onChange={e => setNewRaceDistance(e.target.value)} placeholder="Custom" className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>}
                                    </div>
 
-                                   <input type="text" value={newHistoryRace.time} onChange={(e) => setNewHistoryRace({...newHistoryRace, time: e.target.value})} placeholder="Time ( 4:25:30)" className="md:col-span-2 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                   <input type="text" value={newRaceTime} onChange={(e) => setNewRaceTime(e.target.value)} placeholder="Time ( 4:25:30)" className="md:col-span-2 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                    
-                                   <input type="date" value={newHistoryRace.date} onChange={(e) => setNewHistoryRace({...newHistoryRace, date: e.target.value})} className={`md:col-span-2 w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newHistoryRace.date ? 'text-slate-400 dark:text-slate-500' : 'dark:text-white'}`}/>
+                                   <input type="date" value={newRaceDate} onChange={(e) => setNewRaceDate(e.target.value)} className={`md:col-span-2 w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newRaceDate ? 'text-slate-400 dark:text-slate-500' : 'dark:text-white'}`}/>
 
                                    <div className="relative md:col-span-6">
                                         <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
-                                        <input type="url" value={newHistoryRace.link} onChange={(e) => setNewHistoryRace({...newHistoryRace, link: e.target.value})} placeholder="Race Website Link (Optional)" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
+                                        <input type="url" value={newRaceLink} onChange={(e) => setNewRaceLink(e.target.value)} placeholder="Race Website Link (Optional)" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
                                    </div>
                                    
-                                   <textarea value={newHistoryRace.notes} onChange={(e) => setNewHistoryRace({...newHistoryRace, notes: e.target.value})} placeholder="Notes (e.g., weather, how you felt)" className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none h-20"/>
+                                   <textarea value={newRaceNotes} onChange={(e) => setNewRaceNotes(e.target.value)} placeholder="Notes (e.g., weather, how you felt)" className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none h-20"/>
 
                                    <button type="submit" className="md:col-span-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md"><Plus size={20} className="mr-2"/> Add To History</button>
                                 </form>
@@ -621,39 +651,39 @@ useEffect(() => {
                             <section className="bg-white dark:bg-gray-800/50 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-gray-700">
                                  <h2 className="text-2xl font-bold mb-5 flex items-center"><Calendar className="mr-3 text-indigo-500 dark:text-indigo-400" />Upcoming Races</h2>
                                  <form onSubmit={handleAddUpcomingRace} className="mb-6 grid grid-cols-1 md:grid-cols-6 gap-4">
-                                    <input type="text" placeholder="Race Name" value={newUpcomingRace.name} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, name: e.target.value})} className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
-                                    
-                                    <div className={`md:col-span-2 grid gap-2 ${showCustomUpcomingDistance ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                                        <select value={showCustomUpcomingDistance ? 'Custom' : newUpcomingRace.distance} 
-                                            onChange={e => {
-                                                const val = e.target.value;
-                                                setShowCustomUpcomingDistance(val === 'Custom');
-                                                setNewUpcomingRace({...newUpcomingRace, distance: val === 'Custom' ? '' : val});
-                                            }}
-                                            className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                            {STANDARD_DISTANCES.map(d => <option key={d} value={d}>{d}</option>)}
-                                            <option value="Custom">Custom</option>
-                                        </select>
-                                        {showCustomUpcomingDistance && <input type="text" value={newUpcomingRace.distance} onChange={e => setNewUpcomingRace({...newUpcomingRace, distance: e.target.value})} placeholder="Custom" className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>}
-                                   </div>
-                                    <input type="text" placeholder="Goal Time" value={newUpcomingRace.goalTime} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, goalTime: e.target.value})} className="md:col-span-2 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
-                                    
-                                    <input type="date" value={newUpcomingRace.date} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, date: e.target.value})} className={`md:col-span-2 w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newUpcomingRace.date ? 'text-slate-400 dark:text-slate-500' : 'dark:text-white'}`}/>
-                                    
-                                    <div className="relative md:col-span-6">
-                                        <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
-                                        <input type="url" placeholder="Race Website Link (Optional)" value={newUpcomingRace.link} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, link: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
+                                     <input type="text" placeholder="Race Name" value={newUpcomingRace.name} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, name: e.target.value})} className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                     
+                                     <div className={`md:col-span-2 grid gap-2 ${showCustomUpcomingDistance ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                                         <select value={showCustomUpcomingDistance ? 'Custom' : newUpcomingRace.distance} 
+                                             onChange={e => {
+                                                 const val = e.target.value;
+                                                 setShowCustomUpcomingDistance(val === 'Custom');
+                                                 setNewUpcomingRace({...newUpcomingRace, distance: val === 'Custom' ? '' : val});
+                                             }}
+                                             className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                             {STANDARD_DISTANCES.map(d => <option key={d} value={d}>{d}</option>)}
+                                             <option value="Custom">Custom</option>
+                                         </select>
+                                         {showCustomUpcomingDistance && <input type="text" value={newUpcomingRace.distance} onChange={e => setNewUpcomingRace({...newUpcomingRace, distance: e.target.value})} placeholder="Custom" className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>}
                                     </div>
+                                     <input type="text" placeholder="Goal Time" value={newUpcomingRace.goalTime} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, goalTime: e.target.value})} className="md:col-span-2 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                     
+                                     <input type="date" value={newUpcomingRace.date} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, date: e.target.value})} className={`md:col-span-2 w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newUpcomingRace.date ? 'text-slate-400 dark:text-slate-500' : 'dark:text-white'}`}/>
+                                     
+                                     <div className="relative md:col-span-6">
+                                         <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
+                                         <input type="url" placeholder="Race Website Link (Optional)" value={newUpcomingRace.link} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, link: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
+                                     </div>
 
-                                    <textarea placeholder="Related Info (e.g., location, registration link)" value={newUpcomingRace.info} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, info: e.target.value})} className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 h-20 resize-none"/>
-                                    <button type="submit" className="md:col-span-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md"><Plus size={20} className="mr-2"/> Add Upcoming Race</button>
-                                </form>
+                                     <textarea placeholder="Related Info (e.g., location, registration link)" value={newUpcomingRace.info} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, info: e.target.value})} className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 h-20 resize-none"/>
+                                     <button type="submit" className="md:col-span-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md"><Plus size={20} className="mr-2"/> Add Upcoming Race</button>
+                                 </form>
                                  <div className="space-y-4 max-h-[32rem] overflow-y-auto pr-2">
-                                    {upcomingRaces.length > 0 ? upcomingRaces.map(race => {
-                                            const isPast = new Date(race.date) < new Date();
+                                     {upcomingRaces.length > 0 ? upcomingRaces.map(race => {
+                                            const isPast = new Date(race.date + 'T00:00:00') < new Date();
                                             return (
                                             <div id={`upcoming-card-${race.id}`} key={race.id} className="bg-slate-50 dark:bg-gray-700/50 border border-slate-200 dark:border-gray-700 rounded-lg transition-all hover:shadow-md dark:hover:border-gray-600 overflow-hidden relative">
-                                                {isPast && (
+                                                {isPast && !race.completed && (
                                                     <button onClick={() => handleOpenCompleteModal(race)} className="bg-green-100 dark:bg-green-800/20 text-green-800 dark:text-green-300 w-full p-2 flex items-center justify-center text-sm font-semibold hover:bg-green-200 dark:hover:bg-green-800/40 transition-colors">
                                                         Mark as complete?
                                                         <CheckSquare size={18} className="ml-2" />
@@ -699,7 +729,6 @@ useEffect(() => {
                                                                 <p className="sm:col-span-2 flex items-center text-sm text-slate-500 dark:text-slate-400 mt-1"><Calendar size={14} className="mr-2 text-indigo-500 dark:text-indigo-400"/>{race.date ? new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : 'Date TBD'}</p>
                                                             </div>
                                                             <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                                                                {isPast && <button onClick={() => handleOpenCompleteModal(race)} className="text-slate-400 hover:text-green-500 transition-colors p-2 rounded-full hover:bg-green-50 dark:hover:bg-green-500/20" aria-label="Mark as complete"><CheckSquare size={18}/></button>}
                                                                 <button onClick={() => handleInitiateShare(race, 'upcoming')} className="text-slate-400 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-gray-600"><Share2 size={18}/></button>
                                                                 {race.link && <a href={race.link} target="_blank" rel="noopener noreferrer" className="text-slate-400 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-gray-600" aria-label="Race Website"><LinkIcon size={18}/></a>}
                                                                 <button onClick={() => handleStartEditUpcomingRace(race)} className="text-slate-400 dark:text-slate-400 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors p-2 rounded-full hover:bg-yellow-50 dark:hover:bg-yellow-500/20"><Edit size={18}/></button>
@@ -715,7 +744,7 @@ useEffect(() => {
                                                 )}
                                             </div>
                                         )}) : <p className="text-slate-400 dark:text-slate-500 text-center py-8">No upcoming races planned.</p>}
-                                </div>
+                                 </div>
                             </section>
                         </main>
                     </>
@@ -1002,7 +1031,7 @@ function UpdateInfoModal({ userProfile, onClose, onUpdate }) {
                 <h2 className="text-2xl font-bold mb-4 dark:text-slate-100">Update Your Info</h2>
                 <div className="space-y-4">
                     <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Your Name" required className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white p-3 rounded-lg border-slate-300"/>
-                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email (Optional, for backup)" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white p-3 rounded-lg border-slate-300"/>
+                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email (Optional, for backup)" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white p-3 rounded-lg border-slate-300"/>
                 </div>
                 <div className="flex justify-end gap-4 mt-6">
                     <button type="button" onClick={onClose} className="bg-slate-200 text-slate-700 p-3 rounded-lg font-bold hover:bg-slate-300 dark:bg-gray-600 dark:text-slate-200 dark:hover:bg-gray-500">
