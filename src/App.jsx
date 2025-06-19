@@ -347,7 +347,10 @@ export default function App() {
 
                 if (cardElement && typeof window.html2canvas === 'function') {
                     showAndHideNotification('Generating image preview...', 5000);
-                    window.html2canvas(cardElement, { scale: 2 }).then(canvas => {
+                    window.html2canvas(cardElement, { 
+                        scale: 2,
+                        backgroundColor: '#f8fafc' // Force light background (slate-50) for image
+                    }).then(canvas => {
                         setShareImageData(canvas.toDataURL('image/png'));
                         setShareImageName(`${raceToShare.data.name.replace(/ /g, '_')}.png`);
                         setShowShareModal(true);
