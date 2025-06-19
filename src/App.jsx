@@ -37,7 +37,7 @@ const firebaseConfig = {
     };
 
 // --- App ID ---
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'benedict-runs-default';
+const appId = 'benedict-runs-default';
 
 // --- Initialize Firebase ---
 const app = initializeApp(firebaseConfig);
