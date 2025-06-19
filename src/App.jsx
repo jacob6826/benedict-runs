@@ -921,9 +921,9 @@ function Stats({ completedRaces }) {
                 const bestRace = relevantRaces.reduce((best, current) => 
                     timeToSeconds(current.time) < timeToSeconds(best.time) ? current : best
                 );
-                yearBests[distance] = { time: bestRace.time };
+                yearBests[distance] = { time: bestRace.time, distance: bestRace.distance };
             } else {
-                 yearBests[distance] = { time: 'N/A' };
+                 yearBests[distance] = { time: 'N/A', distance: null };
             }
         });
         
@@ -980,7 +980,10 @@ function Stats({ completedRaces }) {
                                                     <p className="font-semibold">{race.name}</p>
                                                     <p className="text-xs text-slate-400">{new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                                                 </div>
-                                                <p className="font-mono">{race.time}</p>
+                                                <div className="text-right">
+                                                    <p className="font-mono">{race.time}</p>
+                                                    <p className="font-mono text-xs text-slate-400">{formatPace(race.time, race.distance)}/mi</p>
+                                                </div>
                                             </li>
                                         ))}
                                     </ul>
@@ -993,12 +996,19 @@ function Stats({ completedRaces }) {
                     <div>
                         <h3 className="font-bold mb-3 text-lg text-center">Best Times in {selectedYear === 'All' ? 'All Time' : selectedYear}</h3>
                         <div className="grid grid-cols-2 gap-4">
-                            {STANDARD_DISTANCES.map(distance => (
+                            {STANDARD_DISTANCES.map(distance => {
+                                const record = yearStats.yearBests[distance];
+                                return (
                                 <div key={distance} className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center">
                                     <h4 className="font-bold text-indigo-600 dark:text-indigo-400">{distance}</h4>
-                                    <p className="text-2xl font-semibold mt-2">{yearStats.yearBests[distance].time}</p>
+                                    <p className="text-2xl font-semibold mt-2">{record.time}</p>
+                                    {record.time !== 'N/A' && (
+                                        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                                            {formatPace(record.time, record.distance)} / mi
+                                        </p>
+                                    )}
                                 </div>
-                            ))}
+                            )})}
                         </div>
                     </div>
                 </div>
@@ -1268,4 +1278,4 @@ function UpdateInfoModal({ userProfile, onClose, onUpdate }) {
             </form>
         </div>
     );
-}
+} 
