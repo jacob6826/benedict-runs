@@ -136,10 +136,10 @@ const UpcomingRaceShareableCard = ({ race }) => (
         <p className="font-bold text-2xl text-slate-800">{race.name}</p>
         <p className="text-lg text-slate-500 mt-2 flex items-center"><Calendar size={20} className="inline mr-3 text-indigo-500 flex-shrink-0"/><span>{race.date ? new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : 'Date TBD'}</span></p>
         <div className="mt-6 pt-6 border-t border-slate-200 flex flex-col gap-4 text-lg">
-            <p className="flex items-start"><Flag size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Distance:</strong><span className="ml-2 font-normal">{race.distance || 'N/A'}</span></span></p>
-            <p className="flex items-start"><Target size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Goal:</strong><span className="ml-2 font-normal">{race.goalTime || 'N/A'}</span></span></p>
-            {race.goalTime && <p className="flex items-start"><Gauge size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Goal Pace:</strong><span className="ml-2 font-normal">{formatPace(race.goalTime, race.distance)} / mi</span></span></p>}
-            {race.info && <p className="flex items-start"><Info size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Info:</strong><span className="ml-2 font-normal">{race.info}</span></span></p>}
+            <p className="text-slate-600 flex items-start"><Flag size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Distance:</strong><span className="ml-2 font-normal">{race.distance || 'N/A'}</span></span></p>
+            <p className="text-slate-600 flex items-start"><Target size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Goal:</strong><span className="ml-2 font-normal">{race.goalTime || 'N/A'}</span></span></p>
+            {race.goalTime && <p className="text-slate-600 flex items-start"><Gauge size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Goal Pace:</strong><span className="ml-2 font-normal">{formatPace(race.goalTime, race.distance)} / mi</span></span></p>}
+            {race.info && <p className="text-slate-600 flex items-start"><Info size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Info:</strong><span className="ml-2 font-normal">{race.info}</span></span></p>}
         </div>
     </div>
 );
