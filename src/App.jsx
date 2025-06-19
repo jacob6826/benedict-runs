@@ -672,7 +672,16 @@ export default function App() {
 
                                        <input type="text" value={newRaceTime} onChange={(e) => setNewRaceTime(e.target.value)} placeholder="Time ( 4:25:30)" className="md:col-span-2 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                        
-                                       <input type="date" value={newRaceDate} onChange={(e) => setNewRaceDate(e.target.value)} className={`md:col-span-2 w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newRaceDate ? 'text-slate-400 dark:text-slate-500' : 'dark:text-white'}`}/>
+                                        <div className="relative md:col-span-2">
+                                            <input 
+                                                type="date" 
+                                                value={newRaceDate} 
+                                                onChange={(e) => setNewRaceDate(e.target.value)} 
+                                                className={`w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-3 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 
+                                                            ${!newRaceDate ? 'text-slate-400' : 'text-slate-800 dark:text-white'}`}
+                                            />
+                                            {!newRaceDate && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">Date</span>}
+                                        </div>
 
                                        <div className="relative md:col-span-6">
                                             <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
@@ -736,7 +745,16 @@ export default function App() {
                                         </div>
                                          <input type="text" placeholder="Goal Time" value={newUpcomingRace.goalTime} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, goalTime: e.target.value})} className="md:col-span-2 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                          
-                                         <input type="date" value={newUpcomingRace.date} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, date: e.target.value})} className={`md:col-span-2 w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newUpcomingRace.date ? 'text-slate-400 dark:text-slate-500' : 'dark:text-white'}`}/>
+                                         <div className="relative md:col-span-2">
+                                            <input 
+                                                type="date" 
+                                                value={newUpcomingRace.date} 
+                                                onChange={(e) => setNewUpcomingRace({...newUpcomingRace, date: e.target.value})}
+                                                className={`w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-3 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500
+                                                            ${!newUpcomingRace.date ? 'text-slate-400' : 'text-slate-800 dark:text-white'}`}
+                                            />
+                                            {!newUpcomingRace.date && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">Date</span>}
+                                        </div>
                                          
                                          <div className="relative md:col-span-6">
                                              <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
@@ -776,7 +794,14 @@ export default function App() {
                                                                 </div>
                                                                 <input type="text" value={editingUpcomingRaceData.goalTime} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, goalTime: e.target.value})} placeholder="Goal Time" className="col-span-2 w-full bg-white dark:bg-gray-600 p-2 rounded border-slate-300 dark:border-gray-500"/>
                                                                 <div className="relative col-span-2">
-                                                                    <input type="date" value={editingUpcomingRaceData.date} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, date: e.target.value})} className={`w-full bg-white dark:bg-gray-600 p-2 rounded border-slate-300 dark:border-gray-500 ${!editingUpcomingRaceData.date ? 'text-slate-400' : 'dark:text-white'}`}/>
+                                                                    <input 
+                                                                        type="date" 
+                                                                        value={editingUpcomingRaceData.date} 
+                                                                        onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, date: e.target.value})} 
+                                                                        className={`w-full bg-white dark:bg-gray-600 p-2 rounded border-slate-300 dark:border-gray-500
+                                                                                    ${!editingUpcomingRaceData.date ? 'text-slate-400' : 'dark:text-white'}`}
+                                                                    />
+                                                                    {!editingUpcomingRaceData.date && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">Date</span>}
                                                                 </div>
                                                             </div>
                                                             <div className="relative">
