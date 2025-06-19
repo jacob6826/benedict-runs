@@ -650,7 +650,7 @@ export default function App() {
                                 <section className="bg-white dark:bg-gray-800/50 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-gray-700">
                                     <h2 className="text-2xl font-bold mb-5 flex items-center"><Flag className="mr-3 text-indigo-500 dark:text-indigo-400" />Race History</h2>
                                     <form onSubmit={handleAddCompletedRace} className="mb-6 grid grid-cols-1 md:grid-cols-6 gap-4">
-                                       <input type="text" value={newRaceName} onChange={(e) => setNewRaceName(e.target.value)} placeholder="Race Name" className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                       <input type="text" value={newRaceName} onChange={(e) => setNewRaceName(e.target.value)} placeholder="Race Name" className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                        
                                        <div className={`grid gap-2 md:col-span-2 ${showCustomHistoryDistance ? 'grid-cols-2' : 'grid-cols-1'}`}>
                                             <select value={showCustomHistoryDistance ? 'Custom' : newRaceDistance} 
@@ -663,35 +663,30 @@ export default function App() {
                                                         setNewRaceDistance(e.target.value);
                                                     }
                                                 }}
-                                                className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                                className="appearance-none w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                                 {STANDARD_DISTANCES.map(d => <option key={d} value={d}>{d}</option>)}
                                                 <option value="Custom">Custom</option>
                                             </select>
-                                            {showCustomHistoryDistance && <input type="text" value={newRaceDistance} onChange={e => setNewRaceDistance(e.target.value)} placeholder="Custom" className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>}
+                                            {showCustomHistoryDistance && <input type="text" value={newRaceDistance} onChange={e => setNewRaceDistance(e.target.value)} placeholder="Custom" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>}
                                        </div>
 
                                        <div className="md:col-span-2">
-                                            <input type="text" value={newRaceTime} onChange={(e) => setNewRaceTime(e.target.value)} placeholder="Time (HH:MM:SS)" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                            <input type="text" value={newRaceTime} onChange={(e) => setNewRaceTime(e.target.value)} placeholder="Time (HH:MM:SS)" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                        </div>
                                        
-                                        <div className="relative md:col-span-2">
-                                            <input 
-                                                type="date" 
-                                                id="newRaceDate"
-                                                value={newRaceDate} 
-                                                onChange={(e) => setNewRaceDate(e.target.value)} 
-                                                className="appearance-none block w-full bg-slate-100 dark:bg-gray-700 rounded-lg border border-slate-300 dark:border-gray-600 px-4 py-2.5 text-inherit focus:outline-none focus:ring-2 focus:ring-indigo-500 peer"
-                                                placeholder=" "
-                                            />
-                                            <label htmlFor="newRaceDate" className="absolute text-sm text-slate-400 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] start-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Date</label>
-                                        </div>
+                                        <input 
+                                            type="date" 
+                                            value={newRaceDate} 
+                                            onChange={(e) => setNewRaceDate(e.target.value)} 
+                                            className={`md:col-span-2 appearance-none w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newRaceDate ? 'text-slate-400' : 'text-inherit'}`}
+                                        />
 
                                        <div className="relative md:col-span-6">
                                             <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
-                                            <input type="url" value={newRaceLink} onChange={(e) => setNewRaceLink(e.target.value)} placeholder="Race Website Link (Optional)" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
+                                            <input type="url" value={newRaceLink} onChange={(e) => setNewRaceLink(e.target.value)} placeholder="Race Website Link (Optional)" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
                                        </div>
                                        
-                                       <textarea value={newRaceNotes} onChange={(e) => setNewRaceNotes(e.target.value)} placeholder="Notes (e.g., weather, how you felt)" className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none h-20"/>
+                                       <textarea value={newRaceNotes} onChange={(e) => setNewRaceNotes(e.target.value)} placeholder="Notes (e.g., weather, how you felt)" className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none h-20"/>
 
                                        <button type="submit" className="md:col-span-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md"><Plus size={20} className="mr-2"/> Add To History</button>
                                     </form>
@@ -731,7 +726,7 @@ export default function App() {
                                 <section className="bg-white dark:bg-gray-800/50 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-gray-700">
                                      <h2 className="text-2xl font-bold mb-5 flex items-center"><Calendar className="mr-3 text-indigo-500 dark:text-indigo-400" />Upcoming Races</h2>
                                      <form onSubmit={handleAddUpcomingRace} className="mb-6 grid grid-cols-1 md:grid-cols-6 gap-4">
-                                         <input type="text" placeholder="Race Name" value={newUpcomingRace.name} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, name: e.target.value})} className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                         <input type="text" placeholder="Race Name" value={newUpcomingRace.name} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, name: e.target.value})} className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                          
                                          <div className={`grid gap-2 md:col-span-2 ${showCustomUpcomingDistance ? 'grid-cols-2' : 'grid-cols-1'}`}>
                                              <select value={showCustomUpcomingDistance ? 'Custom' : newUpcomingRace.distance} 
@@ -740,34 +735,29 @@ export default function App() {
                                                      setShowCustomUpcomingDistance(val === 'Custom');
                                                      setNewUpcomingRace({...newUpcomingRace, distance: val === 'Custom' ? '' : val});
                                                  }}
-                                                 className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                                 className="appearance-none w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                                  {STANDARD_DISTANCES.map(d => <option key={d} value={d}>{d}</option>)}
                                                  <option value="Custom">Custom</option>
                                              </select>
-                                             {showCustomUpcomingDistance && <input type="text" value={newUpcomingRace.distance} onChange={e => setNewUpcomingRace({...newUpcomingRace, distance: e.target.value})} placeholder="Custom" className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>}
+                                             {showCustomUpcomingDistance && <input type="text" value={newUpcomingRace.distance} onChange={e => setNewUpcomingRace({...newUpcomingRace, distance: e.target.value})} placeholder="Custom" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>}
                                         </div>
                                          <div className="md:col-span-2">
-                                            <input type="text" placeholder="Goal Time" value={newUpcomingRace.goalTime} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, goalTime: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                            <input type="text" placeholder="Goal Time" value={newUpcomingRace.goalTime} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, goalTime: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                          </div>
                                          
-                                        <div className="relative md:col-span-2">
-                                            <input 
-                                                type="date" 
-                                                id="newUpcomingRaceDate"
-                                                value={newUpcomingRace.date} 
-                                                onChange={(e) => setNewUpcomingRace({...newUpcomingRace, date: e.target.value})}
-                                                className="appearance-none block w-full bg-slate-100 dark:bg-gray-700 rounded-lg border border-slate-300 dark:border-gray-600 px-4 py-2.5 text-inherit focus:outline-none focus:ring-2 focus:ring-indigo-500 peer"
-                                                placeholder=" "
-                                            />
-                                            <label htmlFor="newUpcomingRaceDate" className="absolute text-sm text-slate-400 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] start-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Date</label>
-                                        </div>
+                                        <input 
+                                            type="date" 
+                                            value={newUpcomingRace.date}
+                                            onChange={(e) => setNewUpcomingRace({...newUpcomingRace, date: e.target.value})}
+                                            className={`md:col-span-2 appearance-none w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newUpcomingRace.date ? 'text-slate-400' : 'text-inherit'}`}
+                                        />
                                          
                                          <div className="relative md:col-span-6">
                                              <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
-                                             <input type="url" placeholder="Race Website Link (Optional)" value={newUpcomingRace.link} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, link: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
+                                             <input type="url" placeholder="Race Website Link (Optional)" value={newUpcomingRace.link} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, link: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
                                          </div>
 
-                                         <textarea placeholder="Related Info (e.g., location, registration link)" value={newUpcomingRace.info} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, info: e.target.value})} className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 h-20 resize-none"/>
+                                         <textarea placeholder="Related Info (e.g., location, registration link)" value={newUpcomingRace.info} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, info: e.target.value})} className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 h-20 resize-none"/>
                                          <button type="submit" className="md:col-span-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md"><Plus size={20} className="mr-2"/> Add Upcoming Race</button>
                                      </form>
                                      <div className="space-y-4 max-h-[32rem] overflow-y-auto pr-2">
@@ -783,7 +773,7 @@ export default function App() {
                                                     )}
                                                     {editingUpcomingRaceId === race.id ? (
                                                         <div className="p-4 space-y-3">
-                                                            <input type="text" value={editingUpcomingRaceData.name} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, name: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                                            <input type="text" value={editingUpcomingRaceData.name} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, name: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                                             <div className="grid grid-cols-6 gap-4">
                                                                 <div className={`col-span-2 grid gap-4 ${showCustomEditDistance ? 'grid-cols-2' : 'grid-cols-1'}`}>
                                                                     <select value={showCustomEditDistance ? 'Custom' : editingUpcomingRaceData.distance} 
@@ -792,32 +782,30 @@ export default function App() {
                                                                             setShowCustomEditDistance(val === 'Custom');
                                                                             setEditingUpcomingRaceData({...editingUpcomingRaceData, distance: val === 'Custom' ? '' : val});
                                                                         }}
-                                                                        className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                                                        className="w-full appearance-none bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                                                         {STANDARD_DISTANCES.map(d => <option key={d} value={d}>{d}</option>)}
                                                                         <option value="Custom">Custom</option>
                                                                     </select>
-                                                                    {showCustomEditDistance && <input type="text" value={editingUpcomingRaceData.distance} onChange={e => setEditingUpcomingRaceData({...editingUpcomingRaceData, distance: e.target.value})} placeholder="Custom" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>}
+                                                                    {showCustomEditDistance && <input type="text" value={editingUpcomingRaceData.distance} onChange={e => setEditingUpcomingRaceData({...editingUpcomingRaceData, distance: e.target.value})} placeholder="Custom" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>}
                                                                 </div>
                                                                 <div className="col-span-2">
-                                                                    <input type="text" value={editingUpcomingRaceData.goalTime} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, goalTime: e.target.value})} placeholder="Goal Time" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                                                    <input type="text" value={editingUpcomingRaceData.goalTime} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, goalTime: e.target.value})} placeholder="Goal Time" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                                                 </div>
                                                                 <div className="relative col-span-2">
                                                                     <input 
                                                                         type="date"
-                                                                        id="editingDate" 
                                                                         value={editingUpcomingRaceData.date} 
                                                                         onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, date: e.target.value})} 
-                                                                        className="appearance-none block w-full bg-slate-100 dark:bg-gray-700 rounded-lg border border-slate-300 dark:border-gray-600 px-4 py-2.5 text-inherit focus:outline-none focus:ring-2 focus:ring-indigo-500 peer"
-                                                                        placeholder=" "
+                                                                        className={`w-full appearance-none bg-slate-100 dark:bg-gray-700 dark:border-gray-600 p-2.5 px-4 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500
+                                                                                    ${!editingUpcomingRaceData.date ? 'text-slate-400' : 'text-inherit'}`}
                                                                     />
-                                                                     <label htmlFor="editingDate" className="absolute text-sm text-slate-400 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] start-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Date</label>
                                                                 </div>
                                                             </div>
                                                             <div className="relative">
                                                                 <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
-                                                                <input type="url" placeholder="Race Website Link (Optional)" value={editingUpcomingRaceData.link} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, link: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
+                                                                <input type="url" placeholder="Race Website Link (Optional)" value={editingUpcomingRaceData.link} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, link: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
                                                             </div>
-                                                            <textarea value={editingUpcomingRaceData.info} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, info: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 h-20 resize-none"/>
+                                                            <textarea value={editingUpcomingRaceData.info} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, info: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 h-20 resize-none"/>
                                                             <div className="flex justify-end gap-2">
                                                                 <button onClick={() => handleSaveUpcomingRace(race.id)} className="p-2 rounded-full text-white bg-green-500 hover:bg-green-600"><Save size={18}/></button>
                                                                 <button onClick={() => setEditingUpcomingRaceId(null)} className="p-2 rounded-full text-slate-600 bg-slate-200 hover:bg-slate-300"><X size={18}/></button>
