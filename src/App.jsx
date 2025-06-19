@@ -1156,4 +1156,4 @@ function UpdateInfoModal({ userProfile, onClose, onUpdate }) {
             </form>
         </div>
     );
-}
+} 
