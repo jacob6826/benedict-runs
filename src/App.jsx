@@ -623,7 +623,7 @@ export default function App() {
                 <div className="container mx-auto p-4 sm:p-6 lg:p-8">
                     <header className="flex justify-between items-center mb-12">
                         <div className="flex items-center">
-                            <img src="/logo.jpg" alt="Benedict Runs Logo" className="w-16 h-16 mr-4 rounded-lg" />
+                            <img src="/logo.jpg" alt="Benedict Runs Logo" className="w-20 h-20 mr-4 rounded-lg" />
                             <div className="text-left">
                                 <h1 className="text-4xl sm:text-5xl font-bold text-indigo-600 dark:text-indigo-400 tracking-tight">{userProfile?.name ? `${userProfile.name}'s` : "My"} Runs</h1>
                                 <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg">Your personal race tracking dashboard</p>
