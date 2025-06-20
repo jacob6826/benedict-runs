@@ -78,6 +78,7 @@ const distanceToMiles = (distance) => {
     const numericalValue = parseFloat(numberMatch[0]);
     if (isNaN(numericalValue)) return 0;
 
+    // Handle specific units first to avoid ambiguity with 'm'
     if (lowerCaseDistance.includes('mile') || lowerCaseDistance.includes('mi') || lowerCaseDistance.includes('m')) {
         return numericalValue;
     }
@@ -884,7 +885,7 @@ export default function App() {
                                                                 <p className="flex items-center"><Flag size={16} className="mr-2 text-indigo-500 dark:text-indigo-400"/><strong>Distance:</strong><span className="ml-2">{race.distance || 'N/A'}</span></p>
                                                                 <p className="flex items-center"><Target size={16} className="mr-2 text-indigo-500 dark:text-indigo-400"/><strong>Goal:</strong><span className="ml-2">{race.goalTime || 'N/A'}</span></p>
                                                                 {race.goalTime && <p className="flex items-center"><Gauge size={16} className="mr-2 text-indigo-500 dark:text-indigo-400"/><strong>Goal Pace:</strong><span className="ml-2">{formatPace(race.goalTime, race.distance)}/mi</span></p>}
-                                                                {race.info && <p className="col-span-full flex items-start mt-1"><Info size={16} className="mr-2 text-indigo-500 dark:text-indigo-400 mt-0.5 flex-shrink-0"/><strong>Info:</strong><span className="ml-2">{race.info}</span></span></p>}
+                                                                {race.info && <p className="col-span-full flex items-start mt-1"><Info size={16} className="mr-2 text-indigo-500 dark:text-indigo-400 mt-0.5 flex-shrink-0"/><strong>Info:</strong><span className="ml-2">{race.info}</span></p>}
                                                             </div>
                                                         </div>
                                                     )}
@@ -932,7 +933,7 @@ function PersonalRecords({ records }) {
                                         <p className="font-semibold text-2xl text-slate-700 dark:text-slate-200">{record.time}</p>
                                         <p className="text-slate-500 dark:text-slate-400 flex items-center mt-1">
                                             <Gauge size={14} className="mr-1.5 flex-shrink-0" />
-                                            <span>{formatPace(record.time, record.distance)} / mi</span>
+                                            <span>{`${formatPace(record.time, record.distance)} / mi`}</span>
                                         </p>
                                     </div>
                                     <div className="text-right flex-shrink-0 pl-2">
@@ -1469,4 +1470,4 @@ function UpdateInfoModal({ userProfile, onClose, onUpdate }) {
             </form>
         </div>
     );
-} 
+}
