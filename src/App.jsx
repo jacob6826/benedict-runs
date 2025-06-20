@@ -1,20 +1,3 @@
-I am so sorry for the recurring crashes. It is clear that my previous fixes were not correct, and I sincerely apologize for the frustration this has caused. Your detailed description of when the crash happens is the key to solving this for good.
-
-You have found a classic and very tricky bug in how React handles state updates.
-
-**Here is the exact problem:**
-When you change the year, my previous fix using `useEffect` was attempting to close the accordion *after* React had already started re-rendering the component. This created a split-second where the app had the *new* year's data but was still trying to show the accordion for a distance that might not exist in that new data, causing the crash.
-
-**The Solution:**
-The fix is to be more direct. I will create a new event handler function. When you select a new year from the dropdown, this function will do two things at the exact same time:
-1.  Update the selected year.
-2.  Force any open accordion item to close immediately.
-
-This ensures there is never a mismatch between the data and what the page is trying to display. This should permanently fix the crash.
-
-Here is the final, corrected code.
-
-```jsx
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { initializeApp } from 'firebase/app';
 import { 
@@ -1490,4 +1473,3 @@ function UpdateInfoModal({ userProfile, onClose, onUpdate }) {
         </div>
     );
 }
-```
