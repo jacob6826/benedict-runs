@@ -78,8 +78,7 @@ const distanceToMiles = (distance) => {
     const numericalValue = parseFloat(numberMatch[0]);
     if (isNaN(numericalValue)) return 0;
 
-    // Handle specific units first to avoid ambiguity with 'm'
-    if (lowerCaseDistance.includes('mile') || lowerCaseDistance.includes('mi')) {
+    if (lowerCaseDistance.includes('mile') || lowerCaseDistance.includes('mi') || lowerCaseDistance.includes('m')) {
         return numericalValue;
     }
     if (lowerCaseDistance.includes('km') || (lowerCaseDistance.includes('k') && !lowerCaseDistance.includes('mile'))) {
@@ -88,16 +87,7 @@ const distanceToMiles = (distance) => {
     if (lowerCaseDistance.includes('meter')) {
         return numericalValue / 1609.34;
     }
-    // Handle ambiguous 'm' - if the number is large, assume meters. Otherwise, assume miles.
-    if (lowerCaseDistance.includes('m')) {
-        if (numericalValue > 400) { // Most likely 800m, 1500m, etc.
-            return numericalValue / 1609.34; // Treat as meters
-        } else {
-            return numericalValue; // Treat as miles
-        }
-    }
     
-    // Default to miles if no unit is specified
     return numericalValue;
 };
 
@@ -1001,11 +991,11 @@ function Stats({ completedRaces }) {
             acc[distance].push(race);
             return acc;
         }, {});
-        
+
+        const distanceStats = {};
         const uniqueDistances = Array.from(new Set(filteredRaces.map(r => r.distance)));
         const distancesForStats = Array.from(new Set([...STANDARD_DISTANCES, ...uniqueDistances]));
 
-        const distanceStats = {};
         distancesForStats.forEach(distance => {
             const relevantRaces = filteredRaces.filter(r => r.distance === distance);
             
@@ -1023,8 +1013,7 @@ function Stats({ completedRaces }) {
                 }
                 
                 distanceStats[distance] = { bestTime: bestRace.time, distance: bestRace.distance, improvement };
-            } else {
-                 // This case handles standard distances that might not have been run in a specific year
+            } else if (STANDARD_DISTANCES.includes(distance)) {
                  distanceStats[distance] = { bestTime: 'N/A', distance: null, improvement: null };
             }
         });
@@ -1106,6 +1095,12 @@ function Stats({ completedRaces }) {
                                             </button>
                                             {openDistance === distance && (
                                                 <div className="pl-4 pr-2 pt-2 pb-4">
+                                                    {selectedYear !== 'All' && races.length > 1 && (
+                                                        <div className="mb-4">
+                                                            <h4 className="text-sm font-bold text-center mb-2">Time Progression in {selectedYear}</h4>
+                                                            <TimeProgressChart data={races} />
+                                                        </div>
+                                                    )}
                                                     <ul className="space-y-2">
                                                         {races.map(race => (
                                                             <li key={race.id} className="flex justify-between items-center text-sm p-2 bg-slate-100 dark:bg-gray-700 rounded-md">
@@ -1120,12 +1115,6 @@ function Stats({ completedRaces }) {
                                                             </li>
                                                         ))}
                                                     </ul>
-                                                    {selectedYear !== 'All' && races.length > 1 && (
-                                                        <div className="mt-4">
-                                                            <h4 className="text-sm font-bold text-center mb-2">Time Progression in {selectedYear}</h4>
-                                                            <TimeProgressChart data={races} />
-                                                        </div>
-                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -1175,61 +1164,6 @@ function Stats({ completedRaces }) {
     );
 }
 
-const CustomTooltip = ({ active, payload, label }) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    return (
-      <div className="bg-white dark:bg-gray-800 p-2 border border-slate-200 dark:border-gray-600 rounded-lg shadow-lg text-sm">
-        <p className="font-bold">{data.name}</p>
-        <p className="text-slate-500 dark:text-slate-400">{`Date: ${label}`}</p>
-        <p className="text-indigo-600 dark:text-indigo-400">{`Time: ${data.time}`}</p>
-      </div>
-    );
-  }
-
-  return null;
-};
-
-function TimeProgressChart({ data }) {
-    const chartData = useMemo(() => {
-        return data
-            .map(race => ({
-                ...race,
-                dateObj: new Date(race.date + 'T00:00:00'),
-                timeInSeconds: timeToSeconds(race.time)
-            }))
-            .sort((a,b) => a.dateObj - b.dateObj)
-            .map(race => ({
-                ...race,
-                // Format date for the axis label after sorting
-                formattedDate: race.dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-            }));
-    }, [data]);
-
-    return (
-        <div className="w-full h-60">
-            <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                    data={chartData}
-                    margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
-                >
-                    <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
-                    <XAxis dataKey="formattedDate" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis 
-                        domain={['dataMin - 60', 'dataMax + 60']}
-                        allowDecimals={false}
-                        fontSize={12} 
-                        tickLine={false} 
-                        axisLine={false}
-                        tickFormatter={(value) => formatSeconds(value)}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Line type="monotone" dataKey="timeInSeconds" stroke="#4f46e5" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 8 }}/>
-                </LineChart>
-            </ResponsiveContainer>
-        </div>
-    );
-}
 
 // --- Authentication Modals ---
 function NewPRModal({ race, onClose }) {
