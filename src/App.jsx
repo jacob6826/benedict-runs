@@ -720,7 +720,7 @@ export default function App() {
                                            <textarea value={newRaceNotes} onChange={(e) => setNewRaceNotes(e.target.value)} placeholder="Notes (e.g., weather, how you felt)" className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none h-20"/>
 
                                            <div className="md:col-span-6 flex justify-end gap-4">
-                                                <button type="button" onClick={() => setShowHistoryForm(false)} className="bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-gray-600 dark:text-slate-200 dark:hover:bg-gray-500 font-semibold py-2 px-4 rounded-lg">Cancel</button>
+                                                <button type="button" onClick={() => setShowHistoryForm(false)} className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg dark:bg-gray-600 dark:text-slate-200 dark:hover:bg-gray-500">Cancel</button>
                                                 <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md"><Plus size={20} className="mr-2"/> Add To History</button>
                                            </div>
                                         </form>
@@ -801,10 +801,10 @@ export default function App() {
                                              </div>
 
                                              <textarea placeholder="Related Info (e.g., location, registration link)" value={newUpcomingRace.info} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, info: e.target.value})} className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 h-20 resize-none"/>
-                                             <div className="md:col-span-6 flex justify-end gap-4">
-                                                <button type="button" onClick={() => setShowUpcomingForm(false)} className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancel</button>
+                                            <div className="md:col-span-6 flex justify-end gap-4">
+                                                <button type="button" onClick={() => setShowUpcomingForm(false)} className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg dark:bg-gray-600 dark:text-slate-200 dark:hover:bg-gray-500">Cancel</button>
                                                 <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md"><Plus size={20} className="mr-2"/> Add Upcoming Race</button>
-                                             </div>
+                                            </div>
                                          </form>
                                     )}
                                      <div className="space-y-4 max-h-[32rem] overflow-y-auto pr-2">
@@ -959,14 +959,19 @@ function Stats({ completedRaces }) {
             : completedRaces.filter(race => new Date(race.date + 'T00:00:00').getFullYear() === Number(selectedYear));
         
         let totalMiles = 0;
+        let totalTimeInSeconds = 0;
         filteredRaces.forEach(race => {
             try {
                 const miles = distanceToMiles(race.distance);
+                const seconds = timeToSeconds(race.time);
                 if (typeof miles === 'number' && !isNaN(miles)) {
                     totalMiles += miles;
                 }
+                if (typeof seconds === 'number' && !isNaN(seconds)) {
+                    totalTimeInSeconds += seconds;
+                }
             } catch (error) {
-                console.error("Could not parse distance for race:", race, error);
+                console.error("Could not parse race data:", race, error);
             }
         });
         
@@ -1010,7 +1015,8 @@ function Stats({ completedRaces }) {
             racesByDistance: Object.entries(racesByDistance).sort((a,b) => b[1].length - a[1].length), 
             distanceStats,
             totalRaces: filteredRaces.length,
-            totalMiles: totalMiles.toFixed(2)
+            totalMiles: totalMiles.toFixed(2),
+            totalTime: formatSeconds(totalTimeInSeconds)
         };
 
     }, [completedRaces, selectedYear]);
@@ -1041,7 +1047,7 @@ function Stats({ completedRaces }) {
                 <div className="mt-6">
                     {yearStats.totalRaces > 0 ? (
                         <>
-                            <div className="grid grid-cols-2 gap-4 mb-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
                                  <div className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center">
                                     <div className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                                         <Flag size={16} />
@@ -1055,6 +1061,13 @@ function Stats({ completedRaces }) {
                                         <span>Total Miles</span>
                                     </div>
                                     <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">{yearStats.totalMiles}</p>
+                                </div>
+                                <div className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center">
+                                    <div className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                                        <Clock size={16} />
+                                        <span>Total Time</span>
+                                    </div>
+                                    <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">{yearStats.totalTime || '0:00'}</p>
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
