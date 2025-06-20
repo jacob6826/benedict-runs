@@ -79,7 +79,7 @@ const distanceToMiles = (distance) => {
     if (isNaN(numericalValue)) return 0;
 
     // Handle specific units first to avoid ambiguity with 'm'
-    if (lowerCaseDistance.includes('mile') || lowerCaseDistance.includes('mi') || lowerCaseDistance.includes('m')) {
+    if (lowerCaseDistance.includes('mile') || lowerCaseDistance.includes('mi')) {
         return numericalValue;
     }
     if (lowerCaseDistance.includes('km') || (lowerCaseDistance.includes('k') && !lowerCaseDistance.includes('mile'))) {
@@ -88,7 +88,16 @@ const distanceToMiles = (distance) => {
     if (lowerCaseDistance.includes('meter')) {
         return numericalValue / 1609.34;
     }
+    // Handle ambiguous 'm' - if the number is large, assume meters. Otherwise, assume miles.
+    if (lowerCaseDistance.includes('m')) {
+        if (numericalValue > 400) { // Most likely 800m, 1500m, etc.
+            return numericalValue / 1609.34; // Treat as meters
+        } else {
+            return numericalValue; // Treat as miles
+        }
+    }
     
+    // Default to miles if no unit is specified
     return numericalValue;
 };
 
@@ -119,12 +128,6 @@ const formatSeconds = (totalSeconds) => {
         return `${hours}:${paddedMinutes}:${paddedSeconds}`;
     }
     return `${minutes}:${paddedSeconds}`;
-};
-
-const compareDistances = (a, b) => {
-    const milesA = distanceToMiles(a);
-    const milesB = distanceToMiles(b);
-    return milesA - milesB;
 };
 
 const STANDARD_DISTANCES = ["5k", "10k", "1/2 Marathon", "Marathon"];
@@ -311,7 +314,6 @@ export default function App() {
 
             const records = {};
             distancesToCalc.forEach(distance => {
-                if (!distance) return;
                 const relevantRaces = completedRaces.filter(race => race.distance === distance);
 
                 if (relevantRaces.length > 0) {
@@ -424,7 +426,8 @@ export default function App() {
         const goalSeconds = timeToSeconds(raceToComplete.goalTime);
         const currentPR = personalRecords[raceToComplete.distance];
         
-        const isNewPR = timeToSeconds(currentPR?.time) ? completionSeconds < timeToSeconds(currentPR.time) : true;
+        const isNewPR = STANDARD_DISTANCES.includes(raceToComplete.distance) && 
+                        (!currentPR || completionSeconds < timeToSeconds(currentPR?.time));
         
         const goalBeaten = goalSeconds > 0 && completionSeconds < goalSeconds;
 
@@ -446,7 +449,7 @@ export default function App() {
             setCompletionNotes('');
             setShowCompleteModal(false);
 
-            if (isNewPR && STANDARD_DISTANCES.includes(newCompletedRace.distance)) {
+            if (isNewPR) {
                 setNewPRData(newCompletedRace);
                 setShowPRModal(true);
             } else if (goalBeaten) {
@@ -910,10 +913,8 @@ export default function App() {
 // --- Personal Records Component ---
 function PersonalRecords({ records }) {
     const prDistances = useMemo(() => {
-        if (!records) return STANDARD_DISTANCES;
-        const allDistances = Object.keys(records);
-        const uniqueDistances = Array.from(new Set([...STANDARD_DISTANCES, ...allDistances]));
-        return uniqueDistances.sort(compareDistances);
+        const customDistances = Object.keys(records).filter(d => !STANDARD_DISTANCES.includes(d));
+        return [...STANDARD_DISTANCES, ...customDistances];
     }, [records]);
 
     return (
@@ -933,7 +934,7 @@ function PersonalRecords({ records }) {
                                         <p className="font-semibold text-2xl text-slate-700 dark:text-slate-200">{record.time}</p>
                                         <p className="text-slate-500 dark:text-slate-400 flex items-center mt-1">
                                             <Gauge size={14} className="mr-1.5 flex-shrink-0" />
-                                            <span>{`${formatPace(record.time, record.distance)} / mi`}</span>
+                                            <span>{formatPace(record.time, record.distance)} / mi</span>
                                         </p>
                                     </div>
                                     <div className="text-right flex-shrink-0 pl-2">
@@ -963,11 +964,6 @@ function Stats({ completedRaces }) {
     const handleToggleAccordion = (distance) => {
         setOpenDistance(prev => prev === distance ? null : distance);
     };
-
-    useEffect(() => {
-        // When the year filter changes, close any open accordion items to prevent state mismatches.
-        setOpenDistance(null);
-    }, [selectedYear]);
 
     const availableYears = useMemo(() => {
         if (!completedRaces || completedRaces.length === 0) return [];
@@ -1011,7 +1007,6 @@ function Stats({ completedRaces }) {
 
         const distanceStats = {};
         distancesForStats.forEach(distance => {
-             if (!distance) return;
             const relevantRaces = filteredRaces.filter(r => r.distance === distance);
             
             if (relevantRaces.length > 0) {
@@ -1028,7 +1023,8 @@ function Stats({ completedRaces }) {
                 }
                 
                 distanceStats[distance] = { bestTime: bestRace.time, distance: bestRace.distance, improvement };
-            } else if (STANDARD_DISTANCES.includes(distance)) {
+            } else {
+                 // This case handles standard distances that might not have been run in a specific year
                  distanceStats[distance] = { bestTime: 'N/A', distance: null, improvement: null };
             }
         });
@@ -1110,12 +1106,6 @@ function Stats({ completedRaces }) {
                                             </button>
                                             {openDistance === distance && (
                                                 <div className="pl-4 pr-2 pt-2 pb-4">
-                                                    {selectedYear !== 'All' && races.length > 1 && (
-                                                        <div className="mb-4">
-                                                            <h4 className="text-sm font-bold text-center mb-2">Time Progression in {selectedYear}</h4>
-                                                            <TimeProgressChart data={races} />
-                                                        </div>
-                                                    )}
                                                     <ul className="space-y-2">
                                                         {races.map(race => (
                                                             <li key={race.id} className="flex justify-between items-center text-sm p-2 bg-slate-100 dark:bg-gray-700 rounded-md">
@@ -1130,6 +1120,12 @@ function Stats({ completedRaces }) {
                                                             </li>
                                                         ))}
                                                     </ul>
+                                                    {selectedYear !== 'All' && races.length > 1 && (
+                                                        <div className="mt-4">
+                                                            <h4 className="text-sm font-bold text-center mb-2">Time Progression in {selectedYear}</h4>
+                                                            <TimeProgressChart data={races} />
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -1140,7 +1136,7 @@ function Stats({ completedRaces }) {
                                 <div>
                                     <h3 className="font-bold mb-3 text-lg text-center">Best Times in {selectedYear === 'All' ? 'All Time' : selectedYear}</h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        {Object.entries(yearStats.distanceStats).sort((a, b) => compareDistances(a[0], b[0])).map(([distance, record]) => {
+                                        {Object.entries(yearStats.distanceStats).map(([distance, record]) => {
                                             if(record.bestTime === 'N/A' && !STANDARD_DISTANCES.includes(distance)) return null;
                                             return (
                                             <div key={distance} className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center flex flex-col justify-between">
@@ -1179,6 +1175,61 @@ function Stats({ completedRaces }) {
     );
 }
 
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-white dark:bg-gray-800 p-2 border border-slate-200 dark:border-gray-600 rounded-lg shadow-lg text-sm">
+        <p className="font-bold">{data.name}</p>
+        <p className="text-slate-500 dark:text-slate-400">{`Date: ${label}`}</p>
+        <p className="text-indigo-600 dark:text-indigo-400">{`Time: ${data.time}`}</p>
+      </div>
+    );
+  }
+
+  return null;
+};
+
+function TimeProgressChart({ data }) {
+    const chartData = useMemo(() => {
+        return data
+            .map(race => ({
+                ...race,
+                dateObj: new Date(race.date + 'T00:00:00'),
+                timeInSeconds: timeToSeconds(race.time)
+            }))
+            .sort((a,b) => a.dateObj - b.dateObj)
+            .map(race => ({
+                ...race,
+                // Format date for the axis label after sorting
+                formattedDate: race.dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            }));
+    }, [data]);
+
+    return (
+        <div className="w-full h-60">
+            <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                    data={chartData}
+                    margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
+                >
+                    <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
+                    <XAxis dataKey="formattedDate" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis 
+                        domain={['dataMin - 60', 'dataMax + 60']}
+                        allowDecimals={false}
+                        fontSize={12} 
+                        tickLine={false} 
+                        axisLine={false}
+                        tickFormatter={(value) => formatSeconds(value)}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Line type="monotone" dataKey="timeInSeconds" stroke="#4f46e5" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 8 }}/>
+                </LineChart>
+            </ResponsiveContainer>
+        </div>
+    );
+}
 
 // --- Authentication Modals ---
 function NewPRModal({ race, onClose }) {
