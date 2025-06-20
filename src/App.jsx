@@ -44,9 +44,6 @@ const appId = 'benedict-runs-default';
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-// --- DIAGNOSTIC LOG ---
-console.log(`Connecting to Firebase project: ${firebaseConfig.projectId} with appId: ${appId}`);
-setLogLevel('debug');
 
 // --- Helper Functions ---
 const timeToSeconds = (time) => {
@@ -80,14 +77,23 @@ const distanceToMiles = (distance) => {
     const numericalValue = parseFloat(numberMatch[0]);
     if (isNaN(numericalValue)) return 0;
 
+    // Handle specific units first to avoid ambiguity with 'm'
     if (lowerCaseDistance.includes('mile') || lowerCaseDistance.includes('mi')) {
         return numericalValue;
     }
-    if (lowerCaseDistance.includes('km') || lowerCaseDistance.includes('k')) {
+    if (lowerCaseDistance.includes('km') || (lowerCaseDistance.includes('k') && !lowerCaseDistance.includes('mile'))) {
         return numericalValue * 0.621371;
     }
-    if (lowerCaseDistance.includes('m') && !lowerCaseDistance.includes('mi')) {
+    if (lowerCaseDistance.includes('meter')) {
         return numericalValue / 1609.34;
+    }
+    // Handle ambiguous 'm' - if the number is large, assume meters. Otherwise, assume miles.
+    if (lowerCaseDistance.includes('m')) {
+        if (numericalValue > 400) { // Most likely 800m, 1500m, etc.
+            return numericalValue / 1609.34; // Treat as meters
+        } else {
+            return numericalValue; // Treat as miles
+        }
     }
     
     // Default to miles if no unit is specified
@@ -1354,4 +1360,4 @@ function UpdateInfoModal({ userProfile, onClose, onUpdate }) {
             </form>
         </div>
     );
-}
+} 
