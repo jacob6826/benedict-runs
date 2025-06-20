@@ -77,8 +77,7 @@ const distanceToMiles = (distance) => {
     const numericalValue = parseFloat(numberMatch[0]);
     if (isNaN(numericalValue)) return 0;
 
-    // Handle specific units first to avoid ambiguity with 'm'
-    if (lowerCaseDistance.includes('mile') || lowerCaseDistance.includes('mi')) {
+    if (lowerCaseDistance.includes('mile') || lowerCaseDistance.includes('mi') || lowerCaseDistance.includes('m')) {
         return numericalValue;
     }
     if (lowerCaseDistance.includes('km') || (lowerCaseDistance.includes('k') && !lowerCaseDistance.includes('mile'))) {
@@ -87,16 +86,7 @@ const distanceToMiles = (distance) => {
     if (lowerCaseDistance.includes('meter')) {
         return numericalValue / 1609.34;
     }
-    // Handle ambiguous 'm' - if the number is large, assume meters. Otherwise, assume miles.
-    if (lowerCaseDistance.includes('m')) {
-        if (numericalValue > 400) { // Most likely 800m, 1500m, etc.
-            return numericalValue / 1609.34; // Treat as meters
-        } else {
-            return numericalValue; // Treat as miles
-        }
-    }
     
-    // Default to miles if no unit is specified
     return numericalValue;
 };
 
@@ -730,7 +720,7 @@ export default function App() {
                                            <textarea value={newRaceNotes} onChange={(e) => setNewRaceNotes(e.target.value)} placeholder="Notes (e.g., weather, how you felt)" className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none h-20"/>
 
                                            <div className="md:col-span-6 flex justify-end gap-4">
-                                                <button type="button" onClick={() => setShowHistoryForm(false)} className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancel</button>
+                                                <button type="button" onClick={() => setShowHistoryForm(false)} className="bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-gray-600 dark:text-slate-200 dark:hover:bg-gray-500 font-semibold py-2 px-4 rounded-lg">Cancel</button>
                                                 <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md"><Plus size={20} className="mr-2"/> Add To History</button>
                                            </div>
                                         </form>
@@ -811,10 +801,10 @@ export default function App() {
                                              </div>
 
                                              <textarea placeholder="Related Info (e.g., location, registration link)" value={newUpcomingRace.info} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, info: e.target.value})} className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 h-20 resize-none"/>
-                                            <div className="md:col-span-6 flex justify-end gap-4">
+                                             <div className="md:col-span-6 flex justify-end gap-4">
                                                 <button type="button" onClick={() => setShowUpcomingForm(false)} className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancel</button>
-                                                <button type="submit" className="md:col-span-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md"><Plus size={20} className="mr-2"/> Add Upcoming Race</button>
-                                            </div>
+                                                <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md"><Plus size={20} className="mr-2"/> Add Upcoming Race</button>
+                                             </div>
                                          </form>
                                     )}
                                      <div className="space-y-4 max-h-[32rem] overflow-y-auto pr-2">
@@ -921,14 +911,18 @@ function PersonalRecords({ records }) {
                         <div key={distance} className="bg-slate-50 dark:bg-gray-700/50 border border-slate-200 dark:border-gray-700 p-4 rounded-lg">
                             <h3 className="font-bold text-indigo-600 dark:text-indigo-400">{distance}</h3>
                             {record ? (
-                                <div className="mt-2 text-sm">
-                                    <p className="font-semibold text-2xl text-slate-700 dark:text-slate-200">{record.time}</p>
-                                    <p className="text-slate-500 dark:text-slate-400 flex items-center mt-2">
-                                        <Gauge size={14} className="mr-1.5 flex-shrink-0" />
-                                        <span>{formatPace(record.time, record.distance)} / mi</span>
-                                    </p>
-                                    <p className="text-slate-500 dark:text-slate-400 mt-2 truncate" title={record.name}>{record.name}</p>
-                                    <p className="text-slate-400 dark:text-slate-500 text-xs">{record.date ? new Date(record.date + 'T00:00:00').toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : ''}</p>
+                                <div className="mt-2 flex justify-between items-start text-sm">
+                                    <div>
+                                        <p className="font-semibold text-2xl text-slate-700 dark:text-slate-200">{record.time}</p>
+                                        <p className="text-slate-500 dark:text-slate-400 flex items-center mt-1">
+                                            <Gauge size={14} className="mr-1.5 flex-shrink-0" />
+                                            <span>{formatPace(record.time, record.distance)} / mi</span>
+                                        </p>
+                                    </div>
+                                    <div className="text-right flex-shrink-0 pl-2">
+                                        <p className="font-semibold text-slate-600 dark:text-slate-300 truncate" title={record.name}>{record.name}</p>
+                                        <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">{record.date ? new Date(record.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }) : ''}</p>
+                                    </div>
                                 </div>
                             ) : (
                                 <p className="mt-2 text-slate-400 dark:text-slate-500">No record set.</p>
