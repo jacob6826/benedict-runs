@@ -24,7 +24,7 @@ import {
     setLogLevel, 
     orderBy
 } from 'firebase/firestore';
-import { Clock, Flag, Plus, Trash2, Edit, Save, X, Target, Info, Calendar, Link as LinkIcon, User, LogOut, Award, Download, CheckSquare, Share2, ClipboardCopy, Moon, Sun, Gauge, BarChart2, ChevronDown, Milestone, TrendingDown } from 'lucide-react';
+import { Clock, Flag, Plus, Trash2, Edit, Save, X, Target, Info, Calendar, Link as LinkIcon, User, LogOut, Award, Download, CheckSquare, Share2, ClipboardCopy, Moon, Sun, Gauge, BarChart2, ChevronDown, Milestone, TrendingDown, PartyPopper } from 'lucide-react';
 
 // --- Firebase Configuration ---
 const firebaseConfig = {
@@ -191,6 +191,8 @@ export default function App() {
     const [showCompleteModal, setShowCompleteModal] = useState(false);
     const [showPRModal, setShowPRModal] = useState(false);
     const [newPRData, setNewPRData] = useState(null);
+    const [showGoalAchievedModal, setShowGoalAchievedModal] = useState(false);
+    const [goalAchievedData, setGoalAchievedData] = useState(null);
     const [showSettings, setShowSettings] = useState(false);
     const settingsRef = useRef(null);
     const [showUpdateInfoModal, setShowUpdateInfoModal] = useState(false);
@@ -413,14 +415,14 @@ export default function App() {
             return;
         }
 
+        const completionSeconds = timeToSeconds(completionTime);
+        const goalSeconds = timeToSeconds(raceToComplete.goalTime);
         const currentPR = personalRecords[raceToComplete.distance];
-        const newTimeInSeconds = timeToSeconds(completionTime);
-        let isNewPR = false;
-        if (STANDARD_DISTANCES.includes(raceToComplete.distance)) {
-            if (!currentPR || newTimeInSeconds < timeToSeconds(currentPR?.time)) {
-                isNewPR = true;
-            }
-        }
+        
+        const isNewPR = STANDARD_DISTANCES.includes(raceToComplete.distance) && 
+                        (!currentPR || completionSeconds < timeToSeconds(currentPR?.time));
+        
+        const goalBeaten = goalSeconds > 0 && completionSeconds < goalSeconds;
 
         const newCompletedRace = {
             name: raceToComplete.name,
@@ -443,6 +445,9 @@ export default function App() {
             if (isNewPR) {
                 setNewPRData(newCompletedRace);
                 setShowPRModal(true);
+            } else if (goalBeaten) {
+                setGoalAchievedData({ ...newCompletedRace, goalTime: raceToComplete.goalTime });
+                setShowGoalAchievedModal(true);
             } else {
                 showAndHideNotification("Race moved to history!");
             }
@@ -602,6 +607,7 @@ export default function App() {
                 />
             )}
             {showPRModal && <NewPRModal race={newPRData} onClose={() => { setShowPRModal(false); setNewPRData(null); }} />}
+            {showGoalAchievedModal && <GoalAchievedModal race={goalAchievedData} onClose={() => { setShowGoalAchievedModal(false); setGoalAchievedData(null); }} />}
             {showUpdateInfoModal && (
                 <UpdateInfoModal 
                     userProfile={userProfile}
@@ -1125,6 +1131,38 @@ function NewPRModal({ race, onClose }) {
         )}
         <button onClick={onClose} className="mt-6 w-full bg-indigo-600 text-white p-3 rounded-lg font-bold hover:bg-indigo-700">
             Awesome!
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function GoalAchievedModal({ race, onClose }) {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 5000); 
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+      <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md m-4 text-center">
+        <PartyPopper className="text-indigo-500 mx-auto animate-bounce" size={80} />
+        <h2 className="text-3xl font-bold mt-4 text-slate-800">Goal Achieved!</h2>
+        {race && (
+            <div className="text-slate-600 mt-4 text-lg">
+                <p className="font-semibold">{race.name}</p>
+                <p>
+                    <span className="text-sm">Goal: </span>
+                    <span className="line-through">{race.goalTime}</span>
+                    <span className="text-sm ml-4">You Ran: </span>
+                    <span className="font-bold text-indigo-600">{race.time}</span>
+                </p>
+            </div>
+        )}
+        <button onClick={onClose} className="mt-6 w-full bg-indigo-600 text-white p-3 rounded-lg font-bold hover:bg-indigo-700">
+            Way to go!
         </button>
       </div>
     </div>
