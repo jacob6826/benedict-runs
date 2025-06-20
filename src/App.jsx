@@ -963,10 +963,6 @@ function Stats({ completedRaces }) {
         setOpenDistance(prev => prev === distance ? null : distance);
     };
 
-    useEffect(() => {
-        setOpenDistance(null);
-    }, [selectedYear]);
-
     const availableYears = useMemo(() => {
         if (!completedRaces || completedRaces.length === 0) return [];
         const years = new Set(completedRaces.map(race => new Date(race.date + 'T00:00:00').getFullYear()));
@@ -1468,4 +1464,4 @@ function UpdateInfoModal({ userProfile, onClose, onUpdate }) {
             </form>
         </div>
     );
-}
+} 
