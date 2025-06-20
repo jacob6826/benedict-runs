@@ -74,13 +74,21 @@ const distanceToMiles = (distance) => {
         case 'marathon': return 26.2188;
     }
     
-    const numericalValue = parseFloat(lowerCaseDistance);
+    const numberMatch = lowerCaseDistance.match(/[\d.]+/);
+    if (!numberMatch) return 0;
+
+    const numericalValue = parseFloat(numberMatch[0]);
     if (isNaN(numericalValue)) return 0;
 
-    if (lowerCaseDistance.includes('mile')) return numericalValue;
-    if (lowerCaseDistance.includes('mi')) return numericalValue;
-    if (lowerCaseDistance.includes('km')) return numericalValue * 0.621371;
-    if (lowerCaseDistance.includes('m') && !lowerCaseDistance.includes('mi')) return numericalValue / 1609.34;
+    if (lowerCaseDistance.includes('mile') || lowerCaseDistance.includes('mi')) {
+        return numericalValue;
+    }
+    if (lowerCaseDistance.includes('km') || lowerCaseDistance.includes('k')) {
+        return numericalValue * 0.621371;
+    }
+    if (lowerCaseDistance.includes('m') && !lowerCaseDistance.includes('mi')) {
+        return numericalValue / 1609.34;
+    }
     
     // Default to miles if no unit is specified
     return numericalValue;
@@ -1346,4 +1354,4 @@ function UpdateInfoModal({ userProfile, onClose, onUpdate }) {
             </form>
         </div>
     );
-} 
+}
