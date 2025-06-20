@@ -197,6 +197,10 @@ export default function App() {
     const settingsRef = useRef(null);
     const [showUpdateInfoModal, setShowUpdateInfoModal] = useState(false);
 
+    // Form visibility states
+    const [showHistoryForm, setShowHistoryForm] = useState(false);
+    const [showUpcomingForm, setShowUpcomingForm] = useState(false);
+
     // Theme state
     const [isDarkMode, setIsDarkMode] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -492,6 +496,7 @@ export default function App() {
                 setNewRaceNotes(''); 
                 setNewRaceDistance('5k'); 
                 setShowCustomHistoryDistance(false);
+                setShowHistoryForm(false);
             })
             .catch((error) => {
                 console.error("Error adding completed race:", error);
@@ -518,6 +523,7 @@ export default function App() {
             .then(() => {
                 setNewUpcomingRace({ name: '', date: '', distance: '5k', goalTime: '', link: '', info: '' });
                 setShowCustomUpcomingDistance(false);
+                setShowUpcomingForm(false);
             })
             .catch((error) => {
                 console.error("Error adding upcoming race:", error);
@@ -674,48 +680,61 @@ export default function App() {
                             <main className="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-10">
                                 {/* Race History Section */}
                                 <section className="bg-white dark:bg-gray-800/50 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-gray-700">
-                                    <h2 className="text-2xl font-bold mb-5 flex items-center"><Flag className="mr-3 text-indigo-500 dark:text-indigo-400" />Race History</h2>
-                                    <form onSubmit={handleAddCompletedRace} className="mb-6 grid grid-cols-1 md:grid-cols-6 gap-4">
-                                       <input type="text" value={newRaceName} onChange={(e) => setNewRaceName(e.target.value)} placeholder="Race Name" className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
-                                       
-                                       <div className={`grid gap-2 md:col-span-2 ${showCustomHistoryDistance ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                                            <select value={showCustomHistoryDistance ? 'Custom' : newRaceDistance} 
-                                                onChange={e => {
-                                                    if (e.target.value === 'Custom') {
-                                                        setShowCustomHistoryDistance(true);
-                                                        setNewRaceDistance('');
-                                                    } else {
-                                                        setShowCustomHistoryDistance(false);
-                                                        setNewRaceDistance(e.target.value);
-                                                    }
-                                                }}
-                                                className="appearance-none w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                                {STANDARD_DISTANCES.map(d => <option key={d} value={d}>{d}</option>)}
-                                                <option value="Custom">Custom</option>
-                                            </select>
-                                            {showCustomHistoryDistance && <input type="text" value={newRaceDistance} onChange={e => setNewRaceDistance(e.target.value)} placeholder="Custom" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>}
-                                       </div>
+                                    <div className="flex justify-between items-center mb-5">
+                                        <h2 className="text-2xl font-bold flex items-center"><Flag className="mr-3 text-indigo-500 dark:text-indigo-400" />Race History</h2>
+                                        {!showHistoryForm && (
+                                            <button onClick={() => setShowHistoryForm(true)} className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 text-sm font-semibold px-3 py-1.5 rounded-lg flex items-center gap-2 hover:bg-indigo-200 dark:hover:bg-indigo-500/30">
+                                                <Plus size={16} /> Add Race
+                                            </button>
+                                        )}
+                                    </div>
+                                    
+                                    {showHistoryForm && (
+                                        <form onSubmit={handleAddCompletedRace} className="mb-6 grid grid-cols-1 md:grid-cols-6 gap-4">
+                                           <input type="text" value={newRaceName} onChange={(e) => setNewRaceName(e.target.value)} placeholder="Race Name" className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                           
+                                           <div className={`grid gap-2 md:col-span-2 ${showCustomHistoryDistance ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                                                <select value={showCustomHistoryDistance ? 'Custom' : newRaceDistance} 
+                                                    onChange={e => {
+                                                        if (e.target.value === 'Custom') {
+                                                            setShowCustomHistoryDistance(true);
+                                                            setNewRaceDistance('');
+                                                        } else {
+                                                            setShowCustomHistoryDistance(false);
+                                                            setNewRaceDistance(e.target.value);
+                                                        }
+                                                    }}
+                                                    className="appearance-none w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                                    {STANDARD_DISTANCES.map(d => <option key={d} value={d}>{d}</option>)}
+                                                    <option value="Custom">Custom</option>
+                                                </select>
+                                                {showCustomHistoryDistance && <input type="text" value={newRaceDistance} onChange={e => setNewRaceDistance(e.target.value)} placeholder="Custom" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>}
+                                           </div>
 
-                                       <div className="md:col-span-2">
-                                            <input type="text" value={newRaceTime} onChange={(e) => setNewRaceTime(e.target.value)} placeholder="Time (HH:MM:SS)" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
-                                       </div>
-                                       
-                                        <input 
-                                            type="date" 
-                                            value={newRaceDate} 
-                                            onChange={(e) => setNewRaceDate(e.target.value)} 
-                                            className={`md:col-span-2 appearance-none w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newRaceDate ? 'text-slate-400' : 'text-inherit'}`}
-                                        />
+                                           <div className="md:col-span-2">
+                                                <input type="text" value={newRaceTime} onChange={(e) => setNewRaceTime(e.target.value)} placeholder="Time (HH:MM:SS)" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                           </div>
+                                           
+                                            <input 
+                                                type="date" 
+                                                value={newRaceDate} 
+                                                onChange={(e) => setNewRaceDate(e.target.value)} 
+                                                className={`md:col-span-2 appearance-none w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newRaceDate ? 'text-slate-400' : 'text-inherit'}`}
+                                            />
 
-                                       <div className="relative md:col-span-6">
-                                            <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
-                                            <input type="url" value={newRaceLink} onChange={(e) => setNewRaceLink(e.target.value)} placeholder="Race Website Link (Optional)" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
-                                       </div>
-                                       
-                                       <textarea value={newRaceNotes} onChange={(e) => setNewRaceNotes(e.target.value)} placeholder="Notes (e.g., weather, how you felt)" className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none h-20"/>
+                                           <div className="relative md:col-span-6">
+                                                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
+                                                <input type="url" value={newRaceLink} onChange={(e) => setNewRaceLink(e.target.value)} placeholder="Race Website Link (Optional)" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
+                                           </div>
+                                           
+                                           <textarea value={newRaceNotes} onChange={(e) => setNewRaceNotes(e.target.value)} placeholder="Notes (e.g., weather, how you felt)" className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none h-20"/>
 
-                                       <button type="submit" className="md:col-span-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md"><Plus size={20} className="mr-2"/> Add To History</button>
-                                    </form>
+                                           <div className="md:col-span-6 flex justify-end gap-4">
+                                                <button type="button" onClick={() => setShowHistoryForm(false)} className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancel</button>
+                                                <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md"><Plus size={20} className="mr-2"/> Add To History</button>
+                                           </div>
+                                        </form>
+                                    )}
                                     <div className="space-y-3 max-h-[32rem] overflow-y-auto pr-2">
                                        {completedRaces.length > 0 ? completedRaces.map(race => {
                                            const isPR = personalRecords[race.distance]?.id === race.id;
@@ -750,42 +769,54 @@ export default function App() {
 
                                 {/* Upcoming Races Section */}
                                 <section className="bg-white dark:bg-gray-800/50 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-gray-700">
-                                     <h2 className="text-2xl font-bold mb-5 flex items-center"><Calendar className="mr-3 text-indigo-500 dark:text-indigo-400" />Upcoming Races</h2>
-                                     <form onSubmit={handleAddUpcomingRace} className="mb-6 grid grid-cols-1 md:grid-cols-6 gap-4">
-                                         <input type="text" placeholder="Race Name" value={newUpcomingRace.name} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, name: e.target.value})} className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
-                                         
-                                         <div className={`grid gap-2 md:col-span-2 ${showCustomUpcomingDistance ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                                             <select value={showCustomUpcomingDistance ? 'Custom' : newUpcomingRace.distance} 
-                                                 onChange={e => {
-                                                     const val = e.target.value;
-                                                     setShowCustomUpcomingDistance(val === 'Custom');
-                                                     setNewUpcomingRace({...newUpcomingRace, distance: val === 'Custom' ? '' : val});
-                                                 }}
-                                                 className="appearance-none w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                                 {STANDARD_DISTANCES.map(d => <option key={d} value={d}>{d}</option>)}
-                                                 <option value="Custom">Custom</option>
-                                             </select>
-                                             {showCustomUpcomingDistance && <input type="text" value={newUpcomingRace.distance} onChange={e => setNewUpcomingRace({...newUpcomingRace, distance: e.target.value})} placeholder="Custom" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>}
-                                        </div>
-                                         <div className="md:col-span-2">
-                                            <input type="text" placeholder="Goal Time" value={newUpcomingRace.goalTime} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, goalTime: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
-                                         </div>
-                                         
-                                        <input 
-                                            type="date" 
-                                            value={newUpcomingRace.date}
-                                            onChange={(e) => setNewUpcomingRace({...newUpcomingRace, date: e.target.value})}
-                                            className={`md:col-span-2 appearance-none w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newUpcomingRace.date ? 'text-slate-400' : 'text-inherit'}`}
-                                        />
-                                         
-                                         <div className="relative md:col-span-6">
-                                             <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
-                                             <input type="url" placeholder="Race Website Link (Optional)" value={newUpcomingRace.link} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, link: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
-                                         </div>
+                                    <div className="flex justify-between items-center mb-5">
+                                         <h2 className="text-2xl font-bold flex items-center"><Calendar className="mr-3 text-indigo-500 dark:text-indigo-400" />Upcoming Races</h2>
+                                         {!showUpcomingForm && (
+                                            <button onClick={() => setShowUpcomingForm(true)} className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 text-sm font-semibold px-3 py-1.5 rounded-lg flex items-center gap-2 hover:bg-indigo-200 dark:hover:bg-indigo-500/30">
+                                                <Plus size={16} /> Add Race
+                                            </button>
+                                        )}
+                                     </div>
+                                    {showUpcomingForm && (
+                                         <form onSubmit={handleAddUpcomingRace} className="mb-6 grid grid-cols-1 md:grid-cols-6 gap-4">
+                                             <input type="text" placeholder="Race Name" value={newUpcomingRace.name} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, name: e.target.value})} className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                             
+                                             <div className={`grid gap-2 md:col-span-2 ${showCustomUpcomingDistance ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                                                 <select value={showCustomUpcomingDistance ? 'Custom' : newUpcomingRace.distance} 
+                                                     onChange={e => {
+                                                         const val = e.target.value;
+                                                         setShowCustomUpcomingDistance(val === 'Custom');
+                                                         setNewUpcomingRace({...newUpcomingRace, distance: val === 'Custom' ? '' : val});
+                                                     }}
+                                                     className="appearance-none w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                                     {STANDARD_DISTANCES.map(d => <option key={d} value={d}>{d}</option>)}
+                                                     <option value="Custom">Custom</option>
+                                                 </select>
+                                                 {showCustomUpcomingDistance && <input type="text" value={newUpcomingRace.distance} onChange={e => setNewUpcomingRace({...newUpcomingRace, distance: e.target.value})} placeholder="Custom" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>}
+                                            </div>
+                                             <div className="md:col-span-2">
+                                                <input type="text" placeholder="Goal Time" value={newUpcomingRace.goalTime} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, goalTime: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                             </div>
+                                             
+                                            <input 
+                                                type="date" 
+                                                value={newUpcomingRace.date}
+                                                onChange={(e) => setNewUpcomingRace({...newUpcomingRace, date: e.target.value})}
+                                                className={`md:col-span-2 appearance-none w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newUpcomingRace.date ? 'text-slate-400' : 'text-inherit'}`}
+                                            />
+                                             
+                                             <div className="relative md:col-span-6">
+                                                 <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
+                                                 <input type="url" placeholder="Race Website Link (Optional)" value={newUpcomingRace.link} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, link: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
+                                             </div>
 
-                                         <textarea placeholder="Related Info (e.g., location, registration link)" value={newUpcomingRace.info} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, info: e.target.value})} className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 h-20 resize-none"/>
-                                         <button type="submit" className="md:col-span-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md"><Plus size={20} className="mr-2"/> Add Upcoming Race</button>
-                                     </form>
+                                             <textarea placeholder="Related Info (e.g., location, registration link)" value={newUpcomingRace.info} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, info: e.target.value})} className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 h-20 resize-none"/>
+                                            <div className="md:col-span-6 flex justify-end gap-4">
+                                                <button type="button" onClick={() => setShowUpcomingForm(false)} className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancel</button>
+                                                <button type="submit" className="md:col-span-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md"><Plus size={20} className="mr-2"/> Add Upcoming Race</button>
+                                            </div>
+                                         </form>
+                                    )}
                                      <div className="space-y-4 max-h-[32rem] overflow-y-auto pr-2">
                                          {upcomingRaces.length > 0 ? upcomingRaces.map(race => {
                                                 const isPast = new Date(race.date + 'T00:00:00') < new Date();
