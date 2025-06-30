@@ -130,12 +130,6 @@ const formatSeconds = (totalSeconds) => {
     return `${minutes}:${paddedSeconds}`;
 };
 
-const compareDistances = (a, b) => {
-    const milesA = distanceToMiles(a);
-    const milesB = distanceToMiles(b);
-    return milesA - milesB;
-};
-
 const STANDARD_DISTANCES = ["5k", "10k", "1/2 Marathon", "Marathon"];
 
 // --- Loading Spinner Component ---
@@ -311,12 +305,10 @@ export default function App() {
     useEffect(() => {
         const calculatePRs = () => {
             const records = {};
-            const allDistances = Array.from(new Set(completedRaces.map(r => r.distance)));
-            const distancesToCalc = Array.from(new Set([...STANDARD_DISTANCES, ...allDistances]));
-
-            distancesToCalc.forEach(distance => {
-                if (!distance) return;
-                const relevantRaces = completedRaces.filter(race => race.distance === distance);
+            STANDARD_DISTANCES.forEach(distance => {
+                const relevantRaces = completedRaces.filter(race => 
+                    race.distance && race.distance.toLowerCase().trim() === distance.toLowerCase().trim()
+                );
 
                 if (relevantRaces.length > 0) {
                     const bestRace = relevantRaces.reduce((best, current) => {
@@ -1483,11 +1475,11 @@ function TimeProgressChart({ data }) {
     try {
         const chartData = useMemo(() => {
             if (!data) return [];
+            
             const processedData = [];
             data.forEach(race => {
                 if (race && race.date && race.time) {
                     const dateObj = new Date(race.date + 'T00:00:00');
-                    // Most reliable way to check for a valid date
                     if (!isNaN(dateObj.getTime())) {
                         processedData.push({
                             ...race,
