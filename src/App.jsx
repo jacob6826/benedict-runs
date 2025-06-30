@@ -963,8 +963,8 @@ function Stats({ completedRaces }) {
         setOpenDistance(prev => prev === distance ? null : distance);
     };
 
-    // When the year filter changes, close any open accordion items.
     useEffect(() => {
+        // When the year filter changes, close any open accordion items to prevent state mismatches.
         setOpenDistance(null);
     }, [selectedYear]);
 
@@ -1109,13 +1109,7 @@ function Stats({ completedRaces }) {
                                             </button>
                                             {openDistance === distance && (
                                                 <div className="pl-4 pr-2 pt-2 pb-4">
-                                                    {selectedYear !== 'All' && races.length > 1 && (
-                                                        <div className="mb-4">
-                                                            <h4 className="text-sm font-bold text-center mb-2">Time Progression in {selectedYear}</h4>
-                                                            <TimeProgressChart data={races} />
-                                                        </div>
-                                                    )}
-                                                    <ul className="space-y-2">
+                                                    <ul className="space-y-2 mb-4">
                                                         {races.map(race => (
                                                             <li key={race.id} className="flex justify-between items-center text-sm p-2 bg-slate-100 dark:bg-gray-700 rounded-md">
                                                                 <div>
@@ -1129,6 +1123,12 @@ function Stats({ completedRaces }) {
                                                             </li>
                                                         ))}
                                                     </ul>
+                                                    {selectedYear !== 'All' && races.length > 1 && (
+                                                        <div>
+                                                            <h4 className="text-sm font-bold text-center mb-2">Time Progression in {selectedYear}</h4>
+                                                            <TimeProgressChart data={races} />
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -1475,20 +1475,21 @@ function TimeProgressChart({ data }) {
     try {
         const chartData = useMemo(() => {
             if (!data) return [];
-            return data
-                .filter(race => race.date && !isNaN(new Date(race.date + 'T00:00:00')))
-                .map(race => ({
-                    ...race,
-                    dateObj: new Date(race.date + 'T00:00:00'),
-                    timeInSeconds: timeToSeconds(race.time)
-                }))
-                .filter(race => race.timeInSeconds > 0)
-                .sort((a,b) => a.dateObj - b.dateObj)
-                .map(race => ({
-                    ...race,
-                    // Format date for the axis label after sorting
-                    formattedDate: race.dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                }));
+            const processedData = [];
+            data.forEach(race => {
+                if (race && race.date && race.time) {
+                    const dateObj = new Date(race.date + 'T00:00:00');
+                    if (!isNaN(dateObj.getTime())) {
+                        processedData.push({
+                            ...race,
+                            dateObj: dateObj,
+                            timeInSeconds: timeToSeconds(race.time),
+                            formattedDate: dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                        });
+                    }
+                }
+            });
+            return processedData.sort((a,b) => a.dateObj - b.dateObj);
         }, [data]);
 
         if (chartData.length < 2) return null;
