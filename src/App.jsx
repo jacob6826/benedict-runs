@@ -141,7 +141,7 @@ const CompletedRaceShareableCard = ({ race, isPR }) => (
         <div className="flex flex-col gap-4 mt-6 text-lg">
             <p className="text-slate-600 flex items-start"><Flag size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Distance:</strong><span className="ml-2 font-normal">{race.distance || 'N/A'}</span></span></p>
             <p className="text-indigo-600 font-semibold flex items-start"><Clock size={24} className="mr-4 flex-shrink-0 mt-0.5"/><span><strong>Time:</strong><span className="ml-2 font-normal">{race.time}</span></span></p>
-            <p className="text-slate-600 flex items-start"><Gauge size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Pace:</strong><span className="ml-2 font-normal">{formatPace(race.time, race.distance)} / mi</span></span></p>
+            <p className="text-slate-600 flex items-start"><Gauge size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Pace:</strong><span className="ml-2 font-normal">{`${formatPace(race.time, race.distance)} / mi`}</span></span></p>
             <p className="text-slate-600 flex items-start"><Calendar size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Date:</strong><span className="ml-2 font-normal">{race.date ? new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : 'No Date'}</span></span></p>
         </div>
         {race.notes && (
@@ -159,7 +159,7 @@ const UpcomingRaceShareableCard = ({ race }) => (
         <div className="mt-6 pt-6 border-t border-slate-200 flex flex-col gap-4 text-lg">
             <p className="text-slate-600 flex items-start"><Flag size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Distance:</strong><span className="ml-2 font-normal">{race.distance || 'N/A'}</span></span></p>
             <p className="text-slate-600 flex items-start"><Target size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Goal:</strong><span className="ml-2 font-normal">{race.goalTime || 'N/A'}</span></span></p>
-            {race.goalTime && <p className="text-slate-600 flex items-start"><Gauge size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Goal Pace:</strong><span className="ml-2 font-normal">{formatPace(race.goalTime, race.distance)} / mi</span></span></p>}
+            {race.goalTime && <p className="text-slate-600 flex items-start"><Gauge size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Goal Pace:</strong><span className="ml-2 font-normal">{`${formatPace(race.goalTime, race.distance)} / mi`}</span></span></p>}
             {race.info && <p className="text-slate-600 flex items-start"><Info size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Info:</strong><span className="ml-2 font-normal">{race.info}</span></span></p>}
         </div>
     </div>
@@ -294,18 +294,11 @@ export default function App() {
     // --- Personal Records Calculation Effect ---
     useEffect(() => {
         const calculatePRs = () => {
-            if (completedRaces.length === 0) {
-                setPersonalRecords({});
-                return;
-            }
-
-            const allDistances = Array.from(new Set(completedRaces.map(r => r.distance)));
-            const distancesToCalc = Array.from(new Set([...STANDARD_DISTANCES, ...allDistances]));
-
             const records = {};
-            distancesToCalc.forEach(distance => {
-                if (!distance) return;
-                const relevantRaces = completedRaces.filter(race => race.distance === distance);
+            STANDARD_DISTANCES.forEach(distance => {
+                const relevantRaces = completedRaces.filter(race => 
+                    race.distance && race.distance.toLowerCase().trim() === distance.toLowerCase().trim()
+                );
 
                 if (relevantRaces.length > 0) {
                     const bestRace = relevantRaces.reduce((best, current) => {
@@ -317,7 +310,11 @@ export default function App() {
             setPersonalRecords(records);
         };
         
-        calculatePRs();
+        if (completedRaces.length > 0) {
+            calculatePRs();
+        } else {
+            setPersonalRecords({});
+        }
     }, [completedRaces]);
 
     // --- Firestore Real-time Listeners ---
@@ -1099,12 +1096,6 @@ function Stats({ completedRaces }) {
                                             </button>
                                             {openDistance === distance && (
                                                 <div className="pl-4 pr-2 pt-2 pb-4">
-                                                    {selectedYear !== 'All' && races.length > 1 && STANDARD_DISTANCES.includes(distance) && (
-                                                        <div className="mb-4">
-                                                            <h4 className="text-sm font-bold text-center mb-2">Time Progression in {selectedYear}</h4>
-                                                            <TimeProgressChart data={races} />
-                                                        </div>
-                                                    )}
                                                     <ul className="space-y-2">
                                                         {races.map(race => (
                                                             <li key={race.id} className="flex justify-between items-center text-sm p-2 bg-slate-100 dark:bg-gray-700 rounded-md">
@@ -1114,11 +1105,17 @@ function Stats({ completedRaces }) {
                                                                 </div>
                                                                 <div className="text-right">
                                                                     <p className="font-mono">{race.time}</p>
-                                                                    <p className="font-mono text-xs text-slate-400">{formatPace(race.time, race.distance)}/mi</p>
+                                                                    <p className="font-mono text-xs text-slate-400">{`${formatPace(race.time, race.distance)}/mi`}</p>
                                                                 </div>
                                                             </li>
                                                         ))}
                                                     </ul>
+                                                    {selectedYear !== 'All' && races.length > 1 && (
+                                                        <div className="mt-4">
+                                                            <h4 className="text-sm font-bold text-center mb-2">Time Progression in {selectedYear}</h4>
+                                                            <TimeProgressChart data={races} />
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -1186,8 +1183,8 @@ function NewPRModal({ race, onClose }) {
         {race && (
             <div className="text-slate-600 mt-4 text-lg">
                 <p className="font-semibold">{race.name}</p>
-                <p>{race.distance} - <span className="font-bold text-indigo-600">{race.time}</span></p>
-                <p className="text-base mt-1">({formatPace(race.time, race.distance)} / mi)</p>
+                <p>{`${race.distance} - `}<span className="font-bold text-indigo-600">{race.time}</span></p>
+                <p className="text-base mt-1">{`(${formatPace(race.time, race.distance)} / mi)`}</p>
             </div>
         )}
         <button onClick={onClose} className="mt-6 w-full bg-indigo-600 text-white p-3 rounded-lg font-bold hover:bg-indigo-700">
@@ -1401,7 +1398,7 @@ function LoginModal({ onClose, onSwitch }) {
                     </div>
                 </form>
                  <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
-                    Don't have an account? <button onClick={onSwitch} className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Log In</button>
+                    Don't have an account? <button onClick={onSwitch} className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Sign Up</button>
                 </p>
             </div>
         </div>
@@ -1459,4 +1456,53 @@ function UpdateInfoModal({ userProfile, onClose, onUpdate }) {
             </form>
         </div>
     );
+}
+
+function TimeProgressChart({ data }) {
+    try {
+        const chartData = useMemo(() => {
+            return data
+                .map(race => ({
+                    ...race,
+                    dateObj: new Date(race.date + 'T00:00:00'),
+                    timeInSeconds: timeToSeconds(race.time)
+                }))
+                .filter(race => race.dateObj.toString() !== 'Invalid Date' && race.timeInSeconds > 0)
+                .sort((a,b) => a.dateObj - b.dateObj)
+                .map(race => ({
+                    ...race,
+                    // Format date for the axis label after sorting
+                    formattedDate: race.dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                }));
+        }, [data]);
+
+        if (chartData.length < 2) return null;
+
+        return (
+            <div className="w-full h-60">
+                <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                        data={chartData}
+                        margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
+                    >
+                        <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
+                        <XAxis dataKey="formattedDate" fontSize={12} tickLine={false} axisLine={false} />
+                        <YAxis 
+                            domain={['dataMin - 60', 'dataMax + 60']}
+                            allowDecimals={false}
+                            fontSize={12} 
+                            tickLine={false} 
+                            axisLine={false}
+                            tickFormatter={(value) => formatSeconds(value)}
+                        />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Line type="monotone" dataKey="timeInSeconds" stroke="#4f46e5" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 8 }}/>
+                    </LineChart>
+                </ResponsiveContainer>
+            </div>
+        );
+    } catch (error) {
+        console.error("Error rendering chart:", error);
+        return <div className="text-red-500 text-center">Could not display chart.</div>;
+    }
 }
