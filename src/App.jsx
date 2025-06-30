@@ -78,8 +78,7 @@ const distanceToMiles = (distance) => {
     const numericalValue = parseFloat(numberMatch[0]);
     if (isNaN(numericalValue)) return 0;
 
-    // Handle specific units first to avoid ambiguity with 'm'
-    if (lowerCaseDistance.includes('mile') || lowerCaseDistance.includes('mi')) {
+    if (lowerCaseDistance.includes('mile') || lowerCaseDistance.includes('mi') || lowerCaseDistance.includes('m')) {
         return numericalValue;
     }
     if (lowerCaseDistance.includes('km') || (lowerCaseDistance.includes('k') && !lowerCaseDistance.includes('mile'))) {
@@ -88,16 +87,7 @@ const distanceToMiles = (distance) => {
     if (lowerCaseDistance.includes('meter')) {
         return numericalValue / 1609.34;
     }
-    // Handle ambiguous 'm' - if the number is large, assume meters. Otherwise, assume miles.
-    if (lowerCaseDistance.includes('m')) {
-        if (numericalValue > 400) { // Most likely 800m, 1500m, etc.
-            return numericalValue / 1609.34; // Treat as meters
-        } else {
-            return numericalValue; // Treat as miles
-        }
-    }
     
-    // Default to miles if no unit is specified
     return numericalValue;
 };
 
@@ -757,7 +747,7 @@ export default function App() {
                                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm">
                                                         <p className="text-slate-500 dark:text-slate-400 flex items-center"><Flag size={14} className="mr-1.5"/>{race.distance || 'N/A'}</p>
                                                         <p className="text-indigo-600 dark:text-indigo-400 font-medium flex items-center"><Clock size={14} className="mr-1.5" />{race.time}</p>
-                                                        <p className="text-slate-500 dark:text-slate-400 flex items-center"><Gauge size={14} className="mr-1.5"/>{formatPace(race.time, race.distance)}/mi</p>
+                                                        <p className="text-slate-500 dark:text-slate-400 flex items-center"><Gauge size={14} className="mr-1.5"/>{`${formatPace(race.time, race.distance)}/mi`}</p>
                                                         <p className="text-slate-500 dark:text-slate-400 flex items-center"><Calendar size={14} className="mr-1.5"/>{race.date ? new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : 'No Date'}</p>
                                                     </div>
                                                     {race.notes && (
@@ -973,6 +963,11 @@ function Stats({ completedRaces }) {
         setOpenDistance(prev => prev === distance ? null : distance);
     };
 
+    // When the year filter changes, close any open accordion items.
+    useEffect(() => {
+        setOpenDistance(null);
+    }, [selectedYear]);
+
     const availableYears = useMemo(() => {
         if (!completedRaces || completedRaces.length === 0) return [];
         const years = new Set(completedRaces.map(race => new Date(race.date + 'T00:00:00').getFullYear()));
@@ -1042,7 +1037,7 @@ function Stats({ completedRaces }) {
         }
 
         return { 
-            racesByDistance: Object.entries(racesByDistance).sort((a,b) => b[1].length - a[1].length), 
+            racesByDistance: Object.entries(racesByDistance).sort((a,b) => compareDistances(a[0], b[0])), 
             distanceStats,
             totalRaces: filteredRaces.length,
             totalMiles: totalMiles.toFixed(2),
@@ -1065,10 +1060,7 @@ function Stats({ completedRaces }) {
                 </button>
                 <select 
                     value={selectedYear} 
-                    onChange={(e) => {
-                        setSelectedYear(e.target.value);
-                        setOpenDistance(null); // Reset accordion on year change
-                    }}
+                    onChange={(e) => setSelectedYear(e.target.value)}
                     className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit rounded-lg px-4 py-2 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                     <option value="All">All Time</option>
@@ -1482,6 +1474,7 @@ function UpdateInfoModal({ userProfile, onClose, onUpdate }) {
 function TimeProgressChart({ data }) {
     try {
         const chartData = useMemo(() => {
+            if (!data) return [];
             return data
                 .filter(race => race.date && !isNaN(new Date(race.date + 'T00:00:00')))
                 .map(race => ({
@@ -1493,6 +1486,7 @@ function TimeProgressChart({ data }) {
                 .sort((a,b) => a.dateObj - b.dateObj)
                 .map(race => ({
                     ...race,
+                    // Format date for the axis label after sorting
                     formattedDate: race.dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                 }));
         }, [data]);
