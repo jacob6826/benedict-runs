@@ -120,12 +120,6 @@ const formatSeconds = (totalSeconds) => {
     return `${minutes}:${paddedSeconds}`;
 };
 
-const compareDistances = (a, b) => {
-    const milesA = distanceToMiles(a);
-    const milesB = distanceToMiles(b);
-    return milesA - milesB;
-};
-
 const STANDARD_DISTANCES = ["5k", "10k", "1/2 Marathon", "Marathon"];
 
 // --- Loading Spinner Component ---
@@ -963,8 +957,8 @@ function Stats({ completedRaces }) {
         setOpenDistance(prev => prev === distance ? null : distance);
     };
 
+    // When the year filter changes, close any open accordion items.
     useEffect(() => {
-        // When the year filter changes, close any open accordion items to prevent state mismatches.
         setOpenDistance(null);
     }, [selectedYear]);
 
@@ -1004,13 +998,9 @@ function Stats({ completedRaces }) {
             acc[distance].push(race);
             return acc;
         }, {});
-        
-        const uniqueDistances = Array.from(new Set(filteredRaces.map(r => r.distance)));
-        const distancesForStats = Array.from(new Set([...STANDARD_DISTANCES, ...uniqueDistances]));
 
         const distanceStats = {};
-        distancesForStats.forEach(distance => {
-             if (!distance) return;
+        STANDARD_DISTANCES.forEach(distance => {
             const relevantRaces = filteredRaces.filter(r => r.distance === distance);
             
             if (relevantRaces.length > 0) {
@@ -1027,7 +1017,7 @@ function Stats({ completedRaces }) {
                 }
                 
                 distanceStats[distance] = { bestTime: bestRace.time, distance: bestRace.distance, improvement };
-            } else if (STANDARD_DISTANCES.includes(distance)) {
+            } else {
                  distanceStats[distance] = { bestTime: 'N/A', distance: null, improvement: null };
             }
         });
@@ -1109,7 +1099,13 @@ function Stats({ completedRaces }) {
                                             </button>
                                             {openDistance === distance && (
                                                 <div className="pl-4 pr-2 pt-2 pb-4">
-                                                    <ul className="space-y-2 mb-4">
+                                                    {selectedYear !== 'All' && races.length > 1 && STANDARD_DISTANCES.includes(distance) && (
+                                                        <div className="mb-4">
+                                                            <h4 className="text-sm font-bold text-center mb-2">Time Progression in {selectedYear}</h4>
+                                                            <TimeProgressChart data={races} />
+                                                        </div>
+                                                    )}
+                                                    <ul className="space-y-2">
                                                         {races.map(race => (
                                                             <li key={race.id} className="flex justify-between items-center text-sm p-2 bg-slate-100 dark:bg-gray-700 rounded-md">
                                                                 <div>
@@ -1123,12 +1119,6 @@ function Stats({ completedRaces }) {
                                                             </li>
                                                         ))}
                                                     </ul>
-                                                    {selectedYear !== 'All' && races.length > 1 && (
-                                                        <div>
-                                                            <h4 className="text-sm font-bold text-center mb-2">Time Progression in {selectedYear}</h4>
-                                                            <TimeProgressChart data={races} />
-                                                        </div>
-                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -1138,9 +1128,9 @@ function Stats({ completedRaces }) {
                                 {/* Right Column: Year Best Grid */}
                                 <div>
                                     <h3 className="font-bold mb-3 text-lg text-center">Best Times in {selectedYear === 'All' ? 'All Time' : selectedYear}</h3>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        {Object.entries(yearStats.distanceStats).sort((a, b) => compareDistances(a[0], b[0])).map(([distance, record]) => {
-                                            if(record.bestTime === 'N/A' && !STANDARD_DISTANCES.includes(distance)) return null;
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {STANDARD_DISTANCES.map(distance => {
+                                            const record = yearStats.distanceStats[distance];
                                             return (
                                             <div key={distance} className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center flex flex-col justify-between">
                                                 <div>
@@ -1411,7 +1401,7 @@ function LoginModal({ onClose, onSwitch }) {
                     </div>
                 </form>
                  <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
-                    Don't have an account? <button onClick={onSwitch} className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Sign Up</button>
+                    Don't have an account? <button onClick={onSwitch} className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Log In</button>
                 </p>
             </div>
         </div>
@@ -1469,56 +1459,4 @@ function UpdateInfoModal({ userProfile, onClose, onUpdate }) {
             </form>
         </div>
     );
-}
-
-function TimeProgressChart({ data }) {
-    try {
-        const chartData = useMemo(() => {
-            if (!data) return [];
-            const processedData = [];
-            data.forEach(race => {
-                if (race && race.date && race.time) {
-                    const dateObj = new Date(race.date + 'T00:00:00');
-                    if (!isNaN(dateObj.getTime())) {
-                        processedData.push({
-                            ...race,
-                            dateObj: dateObj,
-                            timeInSeconds: timeToSeconds(race.time),
-                            formattedDate: dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                        });
-                    }
-                }
-            });
-            return processedData.sort((a,b) => a.dateObj - b.dateObj);
-        }, [data]);
-
-        if (chartData.length < 2) return null;
-
-        return (
-            <div className="w-full h-60">
-                <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                        data={chartData}
-                        margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
-                    >
-                        <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
-                        <XAxis dataKey="formattedDate" fontSize={12} tickLine={false} axisLine={false} />
-                        <YAxis 
-                            domain={['dataMin - 60', 'dataMax + 60']}
-                            allowDecimals={false}
-                            fontSize={12} 
-                            tickLine={false} 
-                            axisLine={false}
-                            tickFormatter={(value) => formatSeconds(value)}
-                        />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Line type="monotone" dataKey="timeInSeconds" stroke="#4f46e5" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 8 }}/>
-                    </LineChart>
-                </ResponsiveContainer>
-            </div>
-        );
-    } catch (error) {
-        console.error("Error rendering chart:", error);
-        return <div className="text-red-500 text-center">Could not display chart.</div>;
-    }
 }
