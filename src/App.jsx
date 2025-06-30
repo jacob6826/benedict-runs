@@ -304,18 +304,11 @@ export default function App() {
     // --- Personal Records Calculation Effect ---
     useEffect(() => {
         const calculatePRs = () => {
-            if (completedRaces.length === 0) {
-                setPersonalRecords({});
-                return;
-            }
-
-            const allDistances = Array.from(new Set(completedRaces.map(r => r.distance)));
-            const distancesToCalc = Array.from(new Set([...STANDARD_DISTANCES, ...allDistances]));
-
             const records = {};
-            distancesToCalc.forEach(distance => {
-                if (!distance) return;
-                const relevantRaces = completedRaces.filter(race => race.distance === distance);
+            STANDARD_DISTANCES.forEach(distance => {
+                const relevantRaces = completedRaces.filter(race => 
+                    race.distance && race.distance.toLowerCase().trim() === distance.toLowerCase().trim()
+                );
 
                 if (relevantRaces.length > 0) {
                     const bestRace = relevantRaces.reduce((best, current) => {
@@ -327,7 +320,11 @@ export default function App() {
             setPersonalRecords(records);
         };
         
-        calculatePRs();
+        if (completedRaces.length > 0) {
+            calculatePRs();
+        } else {
+            setPersonalRecords({});
+        }
     }, [completedRaces]);
 
     // --- Firestore Real-time Listeners ---
@@ -886,7 +883,7 @@ export default function App() {
                                                             </div>
                                                             <div className="mt-4 pt-4 border-t border-slate-200 dark:border-gray-700 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-slate-600 dark:text-slate-300 text-sm">
                                                                 <p className="flex items-center"><Flag size={16} className="mr-2 text-indigo-500 dark:text-indigo-400"/><strong>Distance:</strong><span className="ml-2">{race.distance || 'N/A'}</span></p>
-                                                                <p className="flex items-center"><Target size={16} className="mr-2 text-indigo-500 dark:text-indigo-400"/><strong>Goal:</strong><span className="ml-2">{race.goalTime || 'N/A'}</span></p>
+                                                                <p className="flex items-center"><Target size={16} className="mr-2 text-indigo-500 dark:text-indigo-400"/><strong>Goal:</strong><span className="ml-2 font-normal">{race.goalTime || 'N/A'}</span></p>
                                                                 {race.goalTime && <p className="flex items-center"><Gauge size={16} className="mr-2 text-indigo-500 dark:text-indigo-400"/><strong>Goal Pace:</strong><span className="ml-2">{formatPace(race.goalTime, race.distance)}/mi</span></p>}
                                                                 {race.info && <p className="col-span-full flex items-start mt-1"><Info size={16} className="mr-2 text-indigo-500 dark:text-indigo-400 mt-0.5 flex-shrink-0"/><strong>Info:</strong><span className="ml-2">{race.info}</span></p>}
                                                             </div>
@@ -912,38 +909,48 @@ export default function App() {
 
 // --- Personal Records Component ---
 function PersonalRecords({ records }) {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const toggleExpansion = () => setIsExpanded(prev => !prev);
+    
     return (
         <section className="bg-white dark:bg-gray-800/50 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-gray-700">
-            <h2 className="text-2xl font-bold mb-5 flex items-center">
-                <Award className="mr-3 text-amber-500" />Personal Records
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {STANDARD_DISTANCES.map(distance => {
-                    const record = records[distance];
-                    return (
-                        <div key={distance} className="bg-slate-50 dark:bg-gray-700/50 border border-slate-200 dark:border-gray-700 p-4 rounded-lg">
-                            <h3 className="font-bold text-indigo-600 dark:text-indigo-400">{distance}</h3>
-                            {record ? (
-                                <div className="mt-2 flex justify-between items-start text-sm">
-                                    <div>
-                                        <p className="font-semibold text-2xl text-slate-700 dark:text-slate-200">{record.time}</p>
-                                        <p className="text-slate-500 dark:text-slate-400 flex items-center mt-1">
-                                            <Gauge size={14} className="mr-1.5 flex-shrink-0" />
-                                            <span>{`${formatPace(record.time, record.distance)} / mi`}</span>
-                                        </p>
-                                    </div>
-                                    <div className="text-right flex-shrink-0 pl-2">
-                                        <p className="font-semibold text-slate-600 dark:text-slate-300 truncate" title={record.name}>{record.name}</p>
-                                        <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">{record.date ? new Date(record.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }) : ''}</p>
-                                    </div>
-                                </div>
-                            ) : (
-                                <p className="mt-2 text-slate-400 dark:text-slate-500">No record set.</p>
-                            )}
-                        </div>
-                    );
-                })}
+            <div className="flex justify-between items-center">
+                 <button onClick={toggleExpansion} className="flex items-center gap-3 text-2xl font-bold p-2 -m-2 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-700/50">
+                    <Award className="text-amber-500" />
+                    <span>Personal Records</span>
+                    <ChevronDown className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} size={24} />
+                </button>
             </div>
+
+            {isExpanded && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-5">
+                    {STANDARD_DISTANCES.map(distance => {
+                        const record = records[distance];
+                        return (
+                            <div key={distance} className="bg-slate-50 dark:bg-gray-700/50 border border-slate-200 dark:border-gray-700 p-4 rounded-lg">
+                                <h3 className="font-bold text-indigo-600 dark:text-indigo-400">{distance}</h3>
+                                {record ? (
+                                    <div className="mt-2 flex justify-between items-start text-sm">
+                                        <div>
+                                            <p className="font-semibold text-2xl text-slate-700 dark:text-slate-200">{record.time}</p>
+                                            <p className="text-slate-500 dark:text-slate-400 flex items-center mt-1">
+                                                <Gauge size={14} className="mr-1.5 flex-shrink-0" />
+                                                <span>{`${formatPace(record.time, record.distance)} / mi`}</span>
+                                            </p>
+                                        </div>
+                                        <div className="text-right flex-shrink-0 pl-2">
+                                            <p className="font-semibold text-slate-600 dark:text-slate-300 truncate" title={record.name}>{record.name}</p>
+                                            <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">{record.date ? new Date(record.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }) : ''}</p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="mt-2 text-slate-400 dark:text-slate-500">No record set.</p>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
         </section>
     );
 }
@@ -960,8 +967,8 @@ function Stats({ completedRaces }) {
         setOpenDistance(prev => prev === distance ? null : distance);
     };
 
-    // When the year filter changes, close any open accordion items.
     useEffect(() => {
+        // When the year filter changes, close any open accordion items to prevent state mismatches.
         setOpenDistance(null);
     }, [selectedYear]);
 
@@ -1030,7 +1037,7 @@ function Stats({ completedRaces }) {
         }
 
         return { 
-            racesByDistance: Object.entries(racesByDistance), 
+            racesByDistance: Object.entries(racesByDistance).sort((a,b) => b[1].length - a[1].length), 
             distanceStats,
             totalRaces: filteredRaces.length,
             totalMiles: totalMiles.toFixed(2),
@@ -1102,6 +1109,12 @@ function Stats({ completedRaces }) {
                                             </button>
                                             {openDistance === distance && (
                                                 <div className="pl-4 pr-2 pt-2 pb-4">
+                                                     {selectedYear !== 'All' && races.length > 1 && STANDARD_DISTANCES.includes(distance) && (
+                                                        <div className="mb-4">
+                                                            <h4 className="text-sm font-bold text-center mb-2">Time Progression in {selectedYear}</h4>
+                                                            <TimeProgressChart data={races} />
+                                                        </div>
+                                                    )}
                                                     <ul className="space-y-2">
                                                         {races.map(race => (
                                                             <li key={race.id} className="flex justify-between items-center text-sm p-2 bg-slate-100 dark:bg-gray-700 rounded-md">
@@ -1116,12 +1129,6 @@ function Stats({ completedRaces }) {
                                                             </li>
                                                         ))}
                                                     </ul>
-                                                    {selectedYear !== 'All' && races.length > 1 && STANDARD_DISTANCES.includes(distance) && (
-                                                        <div className="mt-4">
-                                                            <h4 className="text-sm font-bold text-center mb-2">Time Progression in {selectedYear}</h4>
-                                                            <TimeProgressChart data={races} />
-                                                        </div>
-                                                    )}
                                                 </div>
                                             )}
                                         </div>
