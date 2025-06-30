@@ -78,7 +78,8 @@ const distanceToMiles = (distance) => {
     const numericalValue = parseFloat(numberMatch[0]);
     if (isNaN(numericalValue)) return 0;
 
-    if (lowerCaseDistance.includes('mile') || lowerCaseDistance.includes('mi') || lowerCaseDistance.includes('m')) {
+    // Handle specific units first to avoid ambiguity with 'm'
+    if (lowerCaseDistance.includes('mile') || lowerCaseDistance.includes('mi')) {
         return numericalValue;
     }
     if (lowerCaseDistance.includes('km') || (lowerCaseDistance.includes('k') && !lowerCaseDistance.includes('mile'))) {
@@ -87,7 +88,16 @@ const distanceToMiles = (distance) => {
     if (lowerCaseDistance.includes('meter')) {
         return numericalValue / 1609.34;
     }
+    // Handle ambiguous 'm' - if the number is large, assume meters. Otherwise, assume miles.
+    if (lowerCaseDistance.includes('m')) {
+        if (numericalValue > 400) { // Most likely 800m, 1500m, etc.
+            return numericalValue / 1609.34; // Treat as meters
+        } else {
+            return numericalValue; // Treat as miles
+        }
+    }
     
+    // Default to miles if no unit is specified
     return numericalValue;
 };
 
@@ -141,7 +151,7 @@ const CompletedRaceShareableCard = ({ race, isPR }) => (
         <div className="flex flex-col gap-4 mt-6 text-lg">
             <p className="text-slate-600 flex items-start"><Flag size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Distance:</strong><span className="ml-2 font-normal">{race.distance || 'N/A'}</span></span></p>
             <p className="text-indigo-600 font-semibold flex items-start"><Clock size={24} className="mr-4 flex-shrink-0 mt-0.5"/><span><strong>Time:</strong><span className="ml-2 font-normal">{race.time}</span></span></p>
-            <p className="text-slate-600 flex items-start"><Gauge size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Pace:</strong><span className="ml-2 font-normal">{formatPace(race.time, race.distance)} / mi</span></span></p>
+            <p className="text-slate-600 flex items-start"><Gauge size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Pace:</strong><span className="ml-2 font-normal">{`${formatPace(race.time, race.distance)} / mi`}</span></span></p>
             <p className="text-slate-600 flex items-start"><Calendar size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Date:</strong><span className="ml-2 font-normal">{race.date ? new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : 'No Date'}</span></span></p>
         </div>
         {race.notes && (
@@ -159,7 +169,7 @@ const UpcomingRaceShareableCard = ({ race }) => (
         <div className="mt-6 pt-6 border-t border-slate-200 flex flex-col gap-4 text-lg">
             <p className="text-slate-600 flex items-start"><Flag size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Distance:</strong><span className="ml-2 font-normal">{race.distance || 'N/A'}</span></span></p>
             <p className="text-slate-600 flex items-start"><Target size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Goal:</strong><span className="ml-2 font-normal">{race.goalTime || 'N/A'}</span></span></p>
-            {race.goalTime && <p className="text-slate-600 flex items-start"><Gauge size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Goal Pace:</strong><span className="ml-2 font-normal">{formatPace(race.goalTime, race.distance)} / mi</span></span></p>}
+            {race.goalTime && <p className="text-slate-600 flex items-start"><Gauge size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Goal Pace:</strong><span className="ml-2 font-normal">{`${formatPace(race.goalTime, race.distance)} / mi`}</span></span></p>}
             {race.info && <p className="text-slate-600 flex items-start"><Info size={24} className="mr-4 text-indigo-500 flex-shrink-0 mt-0.5"/><span><strong>Info:</strong><span className="ml-2 font-normal">{race.info}</span></span></p>}
         </div>
     </div>
@@ -304,6 +314,7 @@ export default function App() {
 
             const records = {};
             distancesToCalc.forEach(distance => {
+                if (!distance) return;
                 const relevantRaces = completedRaces.filter(race => race.distance === distance);
 
                 if (relevantRaces.length > 0) {
@@ -416,8 +427,7 @@ export default function App() {
         const goalSeconds = timeToSeconds(raceToComplete.goalTime);
         const currentPR = personalRecords[raceToComplete.distance];
         
-        const isNewPR = STANDARD_DISTANCES.includes(raceToComplete.distance) && 
-                        (!currentPR || completionSeconds < timeToSeconds(currentPR?.time));
+        const isNewPR = timeToSeconds(currentPR?.time) ? completionSeconds < timeToSeconds(currentPR.time) : true;
         
         const goalBeaten = goalSeconds > 0 && completionSeconds < goalSeconds;
 
@@ -439,7 +449,7 @@ export default function App() {
             setCompletionNotes('');
             setShowCompleteModal(false);
 
-            if (isNewPR) {
+            if (isNewPR && STANDARD_DISTANCES.includes(newCompletedRace.distance)) {
                 setNewPRData(newCompletedRace);
                 setShowPRModal(true);
             } else if (goalBeaten) {
@@ -741,7 +751,7 @@ export default function App() {
                                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm">
                                                         <p className="text-slate-500 dark:text-slate-400 flex items-center"><Flag size={14} className="mr-1.5"/>{race.distance || 'N/A'}</p>
                                                         <p className="text-indigo-600 dark:text-indigo-400 font-medium flex items-center"><Clock size={14} className="mr-1.5" />{race.time}</p>
-                                                        <p className="text-slate-500 dark:text-slate-400 flex items-center"><Gauge size={14} className="mr-1.5"/>{formatPace(race.time, race.distance)}/mi</p>
+                                                        <p className="text-slate-500 dark:text-slate-400 flex items-center"><Gauge size={14} className="mr-1.5"/>{`${formatPace(race.time, race.distance)}/mi`}</p>
                                                         <p className="text-slate-500 dark:text-slate-400 flex items-center"><Calendar size={14} className="mr-1.5"/>{race.date ? new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : 'No Date'}</p>
                                                     </div>
                                                     {race.notes && (
@@ -902,18 +912,13 @@ export default function App() {
 
 // --- Personal Records Component ---
 function PersonalRecords({ records }) {
-    const prDistances = useMemo(() => {
-        const customDistances = Object.keys(records).filter(d => !STANDARD_DISTANCES.includes(d));
-        return [...STANDARD_DISTANCES, ...customDistances];
-    }, [records]);
-
     return (
         <section className="bg-white dark:bg-gray-800/50 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-gray-700">
             <h2 className="text-2xl font-bold mb-5 flex items-center">
                 <Award className="mr-3 text-amber-500" />Personal Records
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {prDistances.map(distance => {
+                {STANDARD_DISTANCES.map(distance => {
                     const record = records[distance];
                     return (
                         <div key={distance} className="bg-slate-50 dark:bg-gray-700/50 border border-slate-200 dark:border-gray-700 p-4 rounded-lg">
@@ -924,7 +929,7 @@ function PersonalRecords({ records }) {
                                         <p className="font-semibold text-2xl text-slate-700 dark:text-slate-200">{record.time}</p>
                                         <p className="text-slate-500 dark:text-slate-400 flex items-center mt-1">
                                             <Gauge size={14} className="mr-1.5 flex-shrink-0" />
-                                            <span>{formatPace(record.time, record.distance)} / mi</span>
+                                            <span>{`${formatPace(record.time, record.distance)} / mi`}</span>
                                         </p>
                                     </div>
                                     <div className="text-right flex-shrink-0 pl-2">
@@ -954,6 +959,11 @@ function Stats({ completedRaces }) {
     const handleToggleAccordion = (distance) => {
         setOpenDistance(prev => prev === distance ? null : distance);
     };
+
+    // When the year filter changes, close any open accordion items.
+    useEffect(() => {
+        setOpenDistance(null);
+    }, [selectedYear]);
 
     const availableYears = useMemo(() => {
         if (!completedRaces || completedRaces.length === 0) return [];
@@ -993,10 +1003,7 @@ function Stats({ completedRaces }) {
         }, {});
 
         const distanceStats = {};
-        const uniqueDistances = Array.from(new Set(filteredRaces.map(r => r.distance)));
-        const distancesForStats = Array.from(new Set([...STANDARD_DISTANCES, ...uniqueDistances]));
-
-        distancesForStats.forEach(distance => {
+        STANDARD_DISTANCES.forEach(distance => {
             const relevantRaces = filteredRaces.filter(r => r.distance === distance);
             
             if (relevantRaces.length > 0) {
@@ -1013,7 +1020,7 @@ function Stats({ completedRaces }) {
                 }
                 
                 distanceStats[distance] = { bestTime: bestRace.time, distance: bestRace.distance, improvement };
-            } else if (STANDARD_DISTANCES.includes(distance)) {
+            } else {
                  distanceStats[distance] = { bestTime: 'N/A', distance: null, improvement: null };
             }
         });
@@ -1023,7 +1030,7 @@ function Stats({ completedRaces }) {
         }
 
         return { 
-            racesByDistance: Object.entries(racesByDistance).sort((a,b) => b[1].length - a[1].length), 
+            racesByDistance: Object.entries(racesByDistance), 
             distanceStats,
             totalRaces: filteredRaces.length,
             totalMiles: totalMiles.toFixed(2),
@@ -1095,12 +1102,6 @@ function Stats({ completedRaces }) {
                                             </button>
                                             {openDistance === distance && (
                                                 <div className="pl-4 pr-2 pt-2 pb-4">
-                                                    {selectedYear !== 'All' && races.length > 1 && (
-                                                        <div className="mb-4">
-                                                            <h4 className="text-sm font-bold text-center mb-2">Time Progression in {selectedYear}</h4>
-                                                            <TimeProgressChart data={races} />
-                                                        </div>
-                                                    )}
                                                     <ul className="space-y-2">
                                                         {races.map(race => (
                                                             <li key={race.id} className="flex justify-between items-center text-sm p-2 bg-slate-100 dark:bg-gray-700 rounded-md">
@@ -1110,11 +1111,17 @@ function Stats({ completedRaces }) {
                                                                 </div>
                                                                 <div className="text-right">
                                                                     <p className="font-mono">{race.time}</p>
-                                                                    <p className="font-mono text-xs text-slate-400">{formatPace(race.time, race.distance)}/mi</p>
+                                                                    <p className="font-mono text-xs text-slate-400">{`${formatPace(race.time, race.distance)}/mi`}</p>
                                                                 </div>
                                                             </li>
                                                         ))}
                                                     </ul>
+                                                    {selectedYear !== 'All' && races.length > 1 && STANDARD_DISTANCES.includes(distance) && (
+                                                        <div className="mt-4">
+                                                            <h4 className="text-sm font-bold text-center mb-2">Time Progression in {selectedYear}</h4>
+                                                            <TimeProgressChart data={races} />
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -1124,9 +1131,9 @@ function Stats({ completedRaces }) {
                                 {/* Right Column: Year Best Grid */}
                                 <div>
                                     <h3 className="font-bold mb-3 text-lg text-center">Best Times in {selectedYear === 'All' ? 'All Time' : selectedYear}</h3>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        {Object.entries(yearStats.distanceStats).map(([distance, record]) => {
-                                            if(record.bestTime === 'N/A' && !STANDARD_DISTANCES.includes(distance)) return null;
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {STANDARD_DISTANCES.map(distance => {
+                                            const record = yearStats.distanceStats[distance];
                                             return (
                                             <div key={distance} className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center flex flex-col justify-between">
                                                 <div>
@@ -1164,62 +1171,6 @@ function Stats({ completedRaces }) {
     );
 }
 
-const CustomTooltip = ({ active, payload, label }) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    return (
-      <div className="bg-white dark:bg-gray-800 p-2 border border-slate-200 dark:border-gray-600 rounded-lg shadow-lg text-sm">
-        <p className="font-bold">{data.name}</p>
-        <p className="text-slate-500 dark:text-slate-400">{`Date: ${label}`}</p>
-        <p className="text-indigo-600 dark:text-indigo-400">{`Time: ${data.time}`}</p>
-      </div>
-    );
-  }
-
-  return null;
-};
-
-function TimeProgressChart({ data }) {
-    const chartData = useMemo(() => {
-        return data
-            .map(race => ({
-                ...race,
-                dateObj: new Date(race.date + 'T00:00:00'),
-                timeInSeconds: timeToSeconds(race.time)
-            }))
-            .filter(race => race.dateObj.toString() !== 'Invalid Date' && race.timeInSeconds > 0)
-            .sort((a,b) => a.dateObj - b.dateObj)
-            .map(race => ({
-                ...race,
-                // Format date for the axis label after sorting
-                formattedDate: race.dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-            }));
-    }, [data]);
-
-    return (
-        <div className="w-full h-60">
-            <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                    data={chartData}
-                    margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
-                >
-                    <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
-                    <XAxis dataKey="formattedDate" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis 
-                        domain={['dataMin - 60', 'dataMax + 60']}
-                        allowDecimals={false}
-                        fontSize={12} 
-                        tickLine={false} 
-                        axisLine={false}
-                        tickFormatter={(value) => formatSeconds(value)}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Line type="monotone" dataKey="timeInSeconds" stroke="#4f46e5" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 8 }}/>
-                </LineChart>
-            </ResponsiveContainer>
-        </div>
-    );
-}
 
 // --- Authentication Modals ---
 function NewPRModal({ race, onClose }) {
@@ -1238,8 +1189,8 @@ function NewPRModal({ race, onClose }) {
         {race && (
             <div className="text-slate-600 mt-4 text-lg">
                 <p className="font-semibold">{race.name}</p>
-                <p>{race.distance} - <span className="font-bold text-indigo-600">{race.time}</span></p>
-                <p className="text-base mt-1">({formatPace(race.time, race.distance)} / mi)</p>
+                <p>{`${race.distance} - `}<span className="font-bold text-indigo-600">{race.time}</span></p>
+                <p className="text-base mt-1">{`(${formatPace(race.time, race.distance)} / mi)`}</p>
             </div>
         )}
         <button onClick={onClose} className="mt-6 w-full bg-indigo-600 text-white p-3 rounded-lg font-bold hover:bg-indigo-700">
@@ -1453,7 +1404,7 @@ function LoginModal({ onClose, onSwitch }) {
                     </div>
                 </form>
                  <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
-                    Don't have an account? <button onClick={onSwitch} className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Sign Up</button>
+                    Don't have an account? <button onClick={onSwitch} className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Log In</button>
                 </p>
             </div>
         </div>
@@ -1511,4 +1462,54 @@ function UpdateInfoModal({ userProfile, onClose, onUpdate }) {
             </form>
         </div>
     );
+}
+
+function TimeProgressChart({ data }) {
+    try {
+        const chartData = useMemo(() => {
+            if (!data) return [];
+            return data
+                .filter(race => race && race.date && !isNaN(new Date(race.date + 'T00:00:00').getTime()))
+                .map(race => ({
+                    ...race,
+                    dateObj: new Date(race.date + 'T00:00:00'),
+                    timeInSeconds: timeToSeconds(race.time)
+                }))
+                .filter(race => race.timeInSeconds > 0)
+                .sort((a,b) => a.dateObj.getTime() - b.dateObj.getTime())
+                .map(race => ({
+                    ...race,
+                    formattedDate: race.dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                }));
+        }, [data]);
+
+        if (chartData.length < 2) return null;
+
+        return (
+            <div className="w-full h-60">
+                <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                        data={chartData}
+                        margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
+                    >
+                        <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
+                        <XAxis dataKey="formattedDate" fontSize={12} tickLine={false} axisLine={false} />
+                        <YAxis 
+                            domain={['dataMin - 60', 'dataMax + 60']}
+                            allowDecimals={false}
+                            fontSize={12} 
+                            tickLine={false} 
+                            axisLine={false}
+                            tickFormatter={(value) => formatSeconds(value)}
+                        />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Line type="monotone" dataKey="timeInSeconds" stroke="#4f46e5" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 8 }}/>
+                    </LineChart>
+                </ResponsiveContainer>
+            </div>
+        );
+    } catch (error) {
+        console.error("Error rendering chart:", error);
+        return <div className="text-red-500 text-center">Could not display chart.</div>;
+    }
 }
