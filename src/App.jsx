@@ -130,6 +130,12 @@ const formatSeconds = (totalSeconds) => {
     return `${minutes}:${paddedSeconds}`;
 };
 
+const compareDistances = (a, b) => {
+    const milesA = distanceToMiles(a);
+    const milesB = distanceToMiles(b);
+    return milesA - milesB;
+};
+
 const STANDARD_DISTANCES = ["5k", "10k", "1/2 Marathon", "Marathon"];
 
 // --- Loading Spinner Component ---
@@ -305,10 +311,12 @@ export default function App() {
     useEffect(() => {
         const calculatePRs = () => {
             const records = {};
-            STANDARD_DISTANCES.forEach(distance => {
-                const relevantRaces = completedRaces.filter(race => 
-                    race.distance && race.distance.toLowerCase().trim() === distance.toLowerCase().trim()
-                );
+            const allDistances = Array.from(new Set(completedRaces.map(r => r.distance)));
+            const distancesToCalc = Array.from(new Set([...STANDARD_DISTANCES, ...allDistances]));
+
+            distancesToCalc.forEach(distance => {
+                if (!distance) return;
+                const relevantRaces = completedRaces.filter(race => race.distance === distance);
 
                 if (relevantRaces.length > 0) {
                     const bestRace = relevantRaces.reduce((best, current) => {
@@ -883,7 +891,7 @@ export default function App() {
                                                             </div>
                                                             <div className="mt-4 pt-4 border-t border-slate-200 dark:border-gray-700 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-slate-600 dark:text-slate-300 text-sm">
                                                                 <p className="flex items-center"><Flag size={16} className="mr-2 text-indigo-500 dark:text-indigo-400"/><strong>Distance:</strong><span className="ml-2">{race.distance || 'N/A'}</span></p>
-                                                                <p className="flex items-center"><Target size={16} className="mr-2 text-indigo-500 dark:text-indigo-400"/><strong>Goal:</strong><span className="ml-2 font-normal">{race.goalTime || 'N/A'}</span></p>
+                                                                <p className="flex items-center"><Target size={16} className="mr-2 text-indigo-500 dark:text-indigo-400"/><strong>Goal:</strong><span className="ml-2">{race.goalTime || 'N/A'}</span></p>
                                                                 {race.goalTime && <p className="flex items-center"><Gauge size={16} className="mr-2 text-indigo-500 dark:text-indigo-400"/><strong>Goal Pace:</strong><span className="ml-2">{formatPace(race.goalTime, race.distance)}/mi</span></p>}
                                                                 {race.info && <p className="col-span-full flex items-start mt-1"><Info size={16} className="mr-2 text-indigo-500 dark:text-indigo-400 mt-0.5 flex-shrink-0"/><strong>Info:</strong><span className="ml-2">{race.info}</span></p>}
                                                             </div>
@@ -967,8 +975,8 @@ function Stats({ completedRaces }) {
         setOpenDistance(prev => prev === distance ? null : distance);
     };
 
+    // When the year filter changes, close any open accordion items.
     useEffect(() => {
-        // When the year filter changes, close any open accordion items to prevent state mismatches.
         setOpenDistance(null);
     }, [selectedYear]);
 
@@ -1109,7 +1117,7 @@ function Stats({ completedRaces }) {
                                             </button>
                                             {openDistance === distance && (
                                                 <div className="pl-4 pr-2 pt-2 pb-4">
-                                                     {selectedYear !== 'All' && races.length > 1 && STANDARD_DISTANCES.includes(distance) && (
+                                                    {selectedYear !== 'All' && races.length > 1 && STANDARD_DISTANCES.includes(distance) && (
                                                         <div className="mb-4">
                                                             <h4 className="text-sm font-bold text-center mb-2">Time Progression in {selectedYear}</h4>
                                                             <TimeProgressChart data={races} />
@@ -1475,13 +1483,22 @@ function TimeProgressChart({ data }) {
     try {
         const chartData = useMemo(() => {
             if (!data) return [];
-            return data
-                .filter(race => race && race.date && !isNaN(new Date(race.date + 'T00:00:00').getTime()))
-                .map(race => ({
-                    ...race,
-                    dateObj: new Date(race.date + 'T00:00:00'),
-                    timeInSeconds: timeToSeconds(race.time)
-                }))
+            const processedData = [];
+            data.forEach(race => {
+                if (race && race.date && race.time) {
+                    const dateObj = new Date(race.date + 'T00:00:00');
+                    // Most reliable way to check for a valid date
+                    if (!isNaN(dateObj.getTime())) {
+                        processedData.push({
+                            ...race,
+                            dateObj: dateObj,
+                            timeInSeconds: timeToSeconds(race.time)
+                        });
+                    }
+                }
+            });
+            
+            return processedData
                 .filter(race => race.timeInSeconds > 0)
                 .sort((a,b) => a.dateObj.getTime() - b.dateObj.getTime())
                 .map(race => ({
