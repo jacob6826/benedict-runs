@@ -1,27 +1,27 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { initializeApp } from 'firebase/app';
-import { 
-    getAuth, 
-    onAuthStateChanged, 
-    createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword, 
+import {
+    getAuth,
+    onAuthStateChanged,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
     signOut,
     sendPasswordResetEmail
 } from 'firebase/auth';
-import { 
-    getFirestore, 
-    collection, 
-    addDoc, 
-    onSnapshot, 
-    doc, 
-    deleteDoc, 
-    updateDoc, 
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    onSnapshot,
+    doc,
+    deleteDoc,
+    updateDoc,
     setDoc,
     getDoc,
     query,
     where,
     getDocs,
-    setLogLevel, 
+    setLogLevel,
     orderBy
 } from 'firebase/firestore';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -29,13 +29,13 @@ import { Clock, Flag, Plus, Trash2, Edit, Save, X, Target, Info, Calendar, Link 
 
 // --- Firebase Configuration ---
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // --- App ID ---
@@ -71,7 +71,7 @@ const distanceToMiles = (distance) => {
         case '1/2 marathon': return 13.1094;
         case 'marathon': return 26.2188;
     }
-    
+
     const numberMatch = lowerCaseDistance.match(/[\d.]+/);
     if (!numberMatch) return 0;
 
@@ -87,7 +87,7 @@ const distanceToMiles = (distance) => {
     if (lowerCaseDistance.includes('meter')) {
         return numericalValue / 1609.34;
     }
-    
+
     return numericalValue;
 };
 
@@ -100,13 +100,13 @@ const formatPace = (time, distance) => {
     const secondsPerMile = totalSeconds / totalMiles;
     const paceMinutes = Math.floor(secondsPerMile / 60);
     const paceSeconds = Math.round(secondsPerMile % 60);
-    
+
     return `${paceMinutes}:${paceSeconds.toString().padStart(2, '0')}`;
 };
 
 const formatSeconds = (totalSeconds) => {
     if (totalSeconds <= 0 || !isFinite(totalSeconds)) return null;
-    
+
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = Math.round(totalSeconds % 60);
@@ -172,7 +172,7 @@ export default function App() {
     const [currentUser, setCurrentUser] = useState(null);
     const [userProfile, setUserProfile] = useState(null);
     const [isAuthReady, setIsAuthReady] = useState(false);
-    
+
     // Modal States
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [showSignUpModal, setShowSignUpModal] = useState(false);
@@ -203,10 +203,10 @@ export default function App() {
     // Notification State
     const [notificationMessage, setNotificationMessage] = useState('');
     const [showNotification, setShowNotification] = useState(false);
-    
+
     // Share State
     const [raceToShare, setRaceToShare] = useState(null);
-    
+
     // Complete Race State
     const [raceToComplete, setRaceToComplete] = useState(null);
     const [completionTime, setCompletionTime] = useState('');
@@ -222,16 +222,16 @@ export default function App() {
     const [newRaceNotes, setNewRaceNotes] = useState('');
     const [newRaceDistance, setNewRaceDistance] = useState('5k');
     const [showCustomHistoryDistance, setShowCustomHistoryDistance] = useState(false);
-    
+
     // Upcoming Races State
     const [upcomingRaces, setUpcomingRaces] = useState([]);
     const [newUpcomingRace, setNewUpcomingRace] = useState({ name: '', date: '', distance: '5k', goalTime: '', link: '', info: '' });
     const [showCustomUpcomingDistance, setShowCustomUpcomingDistance] = useState(false);
-    
+
     const [editingUpcomingRaceId, setEditingUpcomingRaceId] = useState(null);
     const [editingUpcomingRaceData, setEditingUpcomingRaceData] = useState({ name: '', date: '', distance: '', goalTime: '', link: '', info: '' });
     const [showCustomEditDistance, setShowCustomEditDistance] = useState(false);
-    
+
     // --- Effect to load external scripts ---
     useEffect(() => {
         const script = document.createElement('script');
@@ -266,7 +266,7 @@ export default function App() {
         });
         return () => unsubscribe();
     }, []);
-    
+
     // --- Dark Mode Effect ---
     useEffect(() => {
         if (isDarkMode) {
@@ -290,7 +290,7 @@ export default function App() {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [settingsRef]);
-    
+
     // --- Personal Records Calculation Effect ---
     useEffect(() => {
         const calculatePRs = () => {
@@ -315,7 +315,7 @@ export default function App() {
             });
             setPersonalRecords(records);
         };
-        
+
         calculatePRs();
     }, [completedRaces]);
 
@@ -325,7 +325,7 @@ export default function App() {
             const path = `artifacts/${appId}/users/${currentUser.uid}/completedRaces`;
             const completedRacesRef = collection(db, path);
             const q = query(completedRacesRef, orderBy('date', 'desc'));
-            
+
             const unsubscribe = onSnapshot(q, (snapshot) => {
                 const races = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
                 setCompletedRaces(races);
@@ -343,7 +343,7 @@ export default function App() {
             const path = `artifacts/${appId}/users/${currentUser.uid}/upcomingRaces`;
             const upcomingRacesRef = collection(db, path);
             const q = query(upcomingRacesRef, orderBy('date', 'asc'));
-            
+
             const unsubscribe = onSnapshot(q, (snapshot) => {
                 const races = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
                 setUpcomingRaces(races);
@@ -365,7 +365,7 @@ export default function App() {
 
                 if (cardElement && typeof window.html2canvas === 'function') {
                     showAndHideNotification('Generating image preview...', 5000);
-                    window.html2canvas(cardElement, { 
+                    window.html2canvas(cardElement, {
                         scale: 2,
                         backgroundColor: '#f8fafc' // Force light background (slate-50) for image
                     }).then(canvas => {
@@ -415,10 +415,10 @@ export default function App() {
         const completionSeconds = timeToSeconds(completionTime);
         const goalSeconds = timeToSeconds(raceToComplete.goalTime);
         const currentPR = personalRecords[raceToComplete.distance];
-        
-        const isNewPR = STANDARD_DISTANCES.includes(raceToComplete.distance) && 
+
+        const isNewPR = STANDARD_DISTANCES.includes(raceToComplete.distance) &&
                         (!currentPR || completionSeconds < timeToSeconds(currentPR?.time));
-        
+
         const goalBeaten = goalSeconds > 0 && completionSeconds < goalSeconds;
 
         const newCompletedRace = {
@@ -457,7 +457,7 @@ export default function App() {
     const handleAddCompletedRace = (e) => {
         e.preventDefault();
         if (!newRaceName.trim() || !newRaceTime.trim() || !newRaceDate.trim() || !newRaceDistance.trim()) return;
-        
+
         const currentPR = personalRecords[newRaceDistance];
         const newTimeInSeconds = timeToSeconds(newRaceTime);
         let isNewPR = false;
@@ -475,19 +475,19 @@ export default function App() {
             distance: newRaceDistance,
             notes: newRaceNotes
         };
-        
+
         addDoc(collection(db, `artifacts/${appId}/users/${currentUser.uid}/completedRaces`), newRace)
             .then(() => {
                 if (isNewPR) {
                     setNewPRData(newRace);
                     setShowPRModal(true);
                 }
-                setNewRaceName(''); 
-                setNewRaceTime(''); 
-                setNewRaceDate(''); 
-                setNewRaceLink(''); 
-                setNewRaceNotes(''); 
-                setNewRaceDistance('5k'); 
+                setNewRaceName('');
+                setNewRaceTime('');
+                setNewRaceDate('');
+                setNewRaceLink('');
+                setNewRaceNotes('');
+                setNewRaceDistance('5k');
                 setShowCustomHistoryDistance(false);
                 setShowHistoryForm(false);
             })
@@ -496,7 +496,7 @@ export default function App() {
                 showAndHideNotification("Error adding race to history.");
             });
     };
-    
+
     const handleDeleteRace = async (id, collectionName) => {
         try {
             await deleteDoc(doc(db, `artifacts/${appId}/users/${currentUser.uid}/${collectionName}`, id));
@@ -505,11 +505,11 @@ export default function App() {
             showAndHideNotification("Error deleting race.");
         }
     };
-    
+
     const handleAddUpcomingRace = (e) => {
         e.preventDefault();
         if (!newUpcomingRace.name.trim() || !newUpcomingRace.date.trim()) return;
-        
+
         const raceData = { ...newUpcomingRace };
 
         addDoc(collection(db, `artifacts/${appId}/users/${currentUser.uid}/upcomingRaces`), raceData)
@@ -523,13 +523,13 @@ export default function App() {
                 showAndHideNotification("Error adding upcoming race.");
             });
     };
-    
+
     const handleStartEditUpcomingRace = (race) => {
         setEditingUpcomingRaceId(race.id);
         setEditingUpcomingRaceData(race);
         setShowCustomEditDistance(!STANDARD_DISTANCES.includes(race.distance));
     };
-    
+
     const handleSaveUpcomingRace = async (id) => {
         try {
             await updateDoc(doc(db, `artifacts/${appId}/users/${currentUser.uid}/upcomingRaces`, id), editingUpcomingRaceData);
@@ -539,7 +539,7 @@ export default function App() {
             showAndHideNotification("Error updating race.");
         }
     };
-    
+
     const handleUpdateUserInfo = async (newName, newEmail) => {
         if (!currentUser) return;
         const profileRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/profile`, "data");
@@ -560,20 +560,24 @@ export default function App() {
 
     const handleResetPassword = () => {
         setShowSettings(false);
-        if (!userProfile?.email) {
+        // Use the email from the Firebase auth object, not the Firestore profile
+        const userEmail = currentUser?.email;
+    
+        if (!userEmail) {
             showAndHideNotification("No email on file to send reset link.", 4000);
             return;
         }
-        sendPasswordResetEmail(auth, userProfile.email)
+    
+        sendPasswordResetEmail(auth, userEmail)
             .then(() => {
-                showAndHideNotification(`Password reset link sent to ${userProfile.email}`);
+                showAndHideNotification(`Password reset link sent to ${userEmail}`);
             })
             .catch((error) => {
                 console.error("Password reset error:", error);
                 showAndHideNotification("Could not send password reset link.");
             });
     };
-    
+
     // --- Render ---
     return (
         <div className={`bg-slate-50 dark:bg-gray-900 text-slate-800 dark:text-slate-200 min-h-screen font-sans antialiased`}>
@@ -585,12 +589,12 @@ export default function App() {
             {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} onSwitch={() => { setShowLoginModal(false); setShowSignUpModal(true); }} />}
             {showSignUpModal && <SignUpModal onClose={() => setShowSignUpModal(false)} onSwitch={() => { setShowSignUpModal(false); setShowLoginModal(true); }} />}
             {showShareModal && (
-                <ShareModal 
+                <ShareModal
                     race={raceToShare?.data}
                     type={raceToShare?.type}
-                    imageData={shareImageData} 
+                    imageData={shareImageData}
                     imageName={shareImageName}
-                    onClose={() => { setShowShareModal(false); setRaceToShare(null); }} 
+                    onClose={() => { setShowShareModal(false); setRaceToShare(null); }}
                     onShareAsText={() => showAndHideNotification('Race details copied!')}
                 />
             )}
@@ -608,7 +612,7 @@ export default function App() {
             {showPRModal && <NewPRModal race={newPRData} onClose={() => { setShowPRModal(false); setNewPRData(null); }} />}
             {showGoalAchievedModal && <GoalAchievedModal race={goalAchievedData} onClose={() => { setShowGoalAchievedModal(false); setGoalAchievedData(null); }} />}
             {showUpdateInfoModal && (
-                <UpdateInfoModal 
+                <UpdateInfoModal
                     userProfile={userProfile}
                     onClose={() => setShowUpdateInfoModal(false)}
                     onUpdate={handleUpdateUserInfo}
@@ -681,13 +685,13 @@ export default function App() {
                                             </button>
                                         )}
                                     </div>
-                                    
+
                                     {showHistoryForm && (
                                         <form onSubmit={handleAddCompletedRace} className="mb-6 grid grid-cols-1 md:grid-cols-6 gap-4">
                                            <input type="text" value={newRaceName} onChange={(e) => setNewRaceName(e.target.value)} placeholder="Race Name" className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
-                                           
+
                                            <div className={`grid gap-2 md:col-span-2 ${showCustomHistoryDistance ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                                                <select value={showCustomHistoryDistance ? 'Custom' : newRaceDistance} 
+                                                <select value={showCustomHistoryDistance ? 'Custom' : newRaceDistance}
                                                     onChange={e => {
                                                         if (e.target.value === 'Custom') {
                                                             setShowCustomHistoryDistance(true);
@@ -707,11 +711,11 @@ export default function App() {
                                            <div className="md:col-span-2">
                                                 <input type="text" value={newRaceTime} onChange={(e) => setNewRaceTime(e.target.value)} placeholder="Time (HH:MM:SS)" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                            </div>
-                                           
-                                            <input 
-                                                type="date" 
-                                                value={newRaceDate} 
-                                                onChange={(e) => setNewRaceDate(e.target.value)} 
+
+                                            <input
+                                                type="date"
+                                                value={newRaceDate}
+                                                onChange={(e) => setNewRaceDate(e.target.value)}
                                                 className={`md:col-span-2 appearance-none w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newRaceDate ? 'text-slate-400' : 'text-inherit'}`}
                                             />
 
@@ -719,7 +723,7 @@ export default function App() {
                                                 <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
                                                 <input type="url" value={newRaceLink} onChange={(e) => setNewRaceLink(e.target.value)} placeholder="Race Website Link (Optional)" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
                                            </div>
-                                           
+
                                            <textarea value={newRaceNotes} onChange={(e) => setNewRaceNotes(e.target.value)} placeholder="Notes (e.g., weather, how you felt)" className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none h-20"/>
 
                                            <div className="md:col-span-6 flex justify-end gap-4">
@@ -756,7 +760,7 @@ export default function App() {
                                                     <button onClick={() => handleDeleteRace(race.id, 'completedRaces')} className="text-slate-400 dark:text-slate-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-500/20" aria-label="Delete race"><Trash2 size={18}/></button>
                                                 </div>
                                             </div>
-                                        )}) : <p className="text-slate-400 dark:text-slate-500 text-center py-8">No completed races yet.</p>}
+                                           )}) : <p className="text-slate-400 dark:text-slate-500 text-center py-8">No completed races yet.</p>}
                                     </div>
                                 </section>
 
@@ -772,48 +776,48 @@ export default function App() {
                                      </div>
                                     {showUpcomingForm && (
                                          <form onSubmit={handleAddUpcomingRace} className="mb-6 grid grid-cols-1 md:grid-cols-6 gap-4">
-                                             <input type="text" placeholder="Race Name" value={newUpcomingRace.name} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, name: e.target.value})} className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
-                                             
-                                             <div className={`grid gap-2 md:col-span-2 ${showCustomUpcomingDistance ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                                                 <select value={showCustomUpcomingDistance ? 'Custom' : newUpcomingRace.distance} 
-                                                     onChange={e => {
-                                                         const val = e.target.value;
-                                                         setShowCustomUpcomingDistance(val === 'Custom');
-                                                         setNewUpcomingRace({...newUpcomingRace, distance: val === 'Custom' ? '' : val});
-                                                     }}
-                                                     className="appearance-none w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                                     {STANDARD_DISTANCES.map(d => <option key={d} value={d}>{d}</option>)}
-                                                     <option value="Custom">Custom</option>
-                                                 </select>
-                                                 {showCustomUpcomingDistance && <input type="text" value={newUpcomingRace.distance} onChange={e => setNewUpcomingRace({...newUpcomingRace, distance: e.target.value})} placeholder="Custom" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>}
-                                            </div>
-                                             <div className="md:col-span-2">
-                                                <input type="text" placeholder="Goal Time" value={newUpcomingRace.goalTime} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, goalTime: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
-                                             </div>
-                                             
-                                            <input 
-                                                type="date" 
-                                                value={newUpcomingRace.date}
-                                                onChange={(e) => setNewUpcomingRace({...newUpcomingRace, date: e.target.value})}
-                                                className={`md:col-span-2 appearance-none w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newUpcomingRace.date ? 'text-slate-400' : 'text-inherit'}`}
-                                            />
-                                             
-                                             <div className="relative md:col-span-6">
-                                                 <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
-                                                 <input type="url" placeholder="Race Website Link (Optional)" value={newUpcomingRace.link} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, link: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
-                                             </div>
+                                              <input type="text" placeholder="Race Name" value={newUpcomingRace.name} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, name: e.target.value})} className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+
+                                              <div className={`grid gap-2 md:col-span-2 ${showCustomUpcomingDistance ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                                                   <select value={showCustomUpcomingDistance ? 'Custom' : newUpcomingRace.distance}
+                                                         onChange={e => {
+                                                             const val = e.target.value;
+                                                             setShowCustomUpcomingDistance(val === 'Custom');
+                                                             setNewUpcomingRace({...newUpcomingRace, distance: val === 'Custom' ? '' : val});
+                                                         }}
+                                                         className="appearance-none w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                                         {STANDARD_DISTANCES.map(d => <option key={d} value={d}>{d}</option>)}
+                                                         <option value="Custom">Custom</option>
+                                                   </select>
+                                                   {showCustomUpcomingDistance && <input type="text" value={newUpcomingRace.distance} onChange={e => setNewUpcomingRace({...newUpcomingRace, distance: e.target.value})} placeholder="Custom" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>}
+                                              </div>
+                                              <div className="md:col-span-2">
+                                                 <input type="text" placeholder="Goal Time" value={newUpcomingRace.goalTime} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, goalTime: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                              </div>
+
+                                             <input
+                                                 type="date"
+                                                 value={newUpcomingRace.date}
+                                                 onChange={(e) => setNewUpcomingRace({...newUpcomingRace, date: e.target.value})}
+                                                 className={`md:col-span-2 appearance-none w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!newUpcomingRace.date ? 'text-slate-400' : 'text-inherit'}`}
+                                             />
+
+                                              <div className="relative md:col-span-6">
+                                                   <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
+                                                   <input type="url" placeholder="Race Website Link (Optional)" value={newUpcomingRace.link} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, link: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
+                                              </div>
 
                                              <textarea placeholder="Related Info (e.g., location, registration link)" value={newUpcomingRace.info} onChange={(e) => setNewUpcomingRace({...newUpcomingRace, info: e.target.value})} className="md:col-span-6 bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 h-20 resize-none"/>
-                                             <div className="md:col-span-6 flex justify-end gap-4">
-                                                <button type="button" onClick={() => setShowUpcomingForm(false)} className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg dark:bg-gray-600 dark:text-slate-200 dark:hover:bg-gray-500">Cancel</button>
-                                                <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md"><Plus size={20} className="mr-2"/> Add Upcoming Race</button>
-                                             </div>
+                                              <div className="md:col-span-6 flex justify-end gap-4">
+                                                 <button type="button" onClick={() => setShowUpcomingForm(false)} className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg dark:bg-gray-600 dark:text-slate-200 dark:hover:bg-gray-500">Cancel</button>
+                                                 <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md"><Plus size={20} className="mr-2"/> Add Upcoming Race</button>
+                                              </div>
                                          </form>
                                     )}
                                      <div className="space-y-4 max-h-[32rem] overflow-y-auto pr-2">
                                          {upcomingRaces.length > 0 ? upcomingRaces.map(race => {
-                                                const isPast = new Date(race.date + 'T00:00:00') < new Date();
-                                                return (
+                                              const isPast = new Date(race.date + 'T00:00:00') < new Date();
+                                              return (
                                                 <div id={`upcoming-card-${race.id}`} key={race.id} className="bg-slate-50 dark:bg-gray-700/50 border border-slate-200 dark:border-gray-700 rounded-lg transition-all hover:shadow-md dark:hover:border-gray-600 overflow-hidden relative">
                                                     {isPast && !race.completed && (
                                                         <button onClick={() => handleOpenCompleteModal(race)} className="bg-green-100 dark:bg-green-800/20 text-green-800 dark:text-green-300 w-full p-2 flex items-center justify-center text-sm font-semibold hover:bg-green-200 dark:hover:bg-green-800/40 transition-colors">
@@ -826,7 +830,7 @@ export default function App() {
                                                             <input type="text" value={editingUpcomingRaceData.name} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, name: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                                             <div className="grid grid-cols-6 gap-4">
                                                                 <div className={`col-span-2 grid gap-4 ${showCustomEditDistance ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                                                                    <select value={showCustomEditDistance ? 'Custom' : editingUpcomingRaceData.distance} 
+                                                                    <select value={showCustomEditDistance ? 'Custom' : editingUpcomingRaceData.distance}
                                                                         onChange={e => {
                                                                             const val = e.target.value;
                                                                             setShowCustomEditDistance(val === 'Custom');
@@ -842,10 +846,10 @@ export default function App() {
                                                                     <input type="text" value={editingUpcomingRaceData.goalTime} onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, goalTime: e.target.value})} placeholder="Goal Time" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                                                 </div>
                                                                 <div className="relative col-span-2">
-                                                                    <input 
+                                                                    <input
                                                                         type="date"
-                                                                        value={editingUpcomingRaceData.date} 
-                                                                        onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, date: e.target.value})} 
+                                                                        value={editingUpcomingRaceData.date}
+                                                                        onChange={(e) => setEditingUpcomingRaceData({...editingUpcomingRaceData, date: e.target.value})}
                                                                         className={`w-full appearance-none bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!editingUpcomingRaceData.date ? 'text-slate-400' : 'text-inherit'}`}
                                                                     />
                                                                 </div>
@@ -883,7 +887,7 @@ export default function App() {
                                                         </div>
                                                     )}
                                                 </div>
-                                            )}) : <p className="text-slate-400 dark:text-slate-500 text-center py-8">No upcoming races planned.</p>}
+                                              )}) : <p className="text-slate-400 dark:text-slate-500 text-center py-8">No upcoming races planned.</p>}
                                      </div>
                                 </section>
                             </main>
@@ -965,7 +969,7 @@ function Stats({ completedRaces }) {
         const filteredRaces = selectedYear === 'All'
             ? completedRaces
             : completedRaces.filter(race => new Date(race.date + 'T00:00:00').getFullYear() === Number(selectedYear));
-        
+
         let totalMiles = 0;
         let totalTimeInSeconds = 0;
         filteredRaces.forEach(race => {
@@ -982,7 +986,7 @@ function Stats({ completedRaces }) {
                 console.error("Could not parse race data:", race, error);
             }
         });
-        
+
         const racesByDistance = filteredRaces.reduce((acc, race) => {
             const distance = race.distance || 'N/A';
             if (!acc[distance]) {
@@ -998,7 +1002,7 @@ function Stats({ completedRaces }) {
 
         distancesForStats.forEach(distance => {
             const relevantRaces = filteredRaces.filter(r => r.distance === distance);
-            
+
             if (relevantRaces.length > 0) {
                 const sortedByTime = [...relevantRaces].sort((a, b) => timeToSeconds(a.time) - timeToSeconds(b.time));
                 const bestRace = sortedByTime[0];
@@ -1011,19 +1015,19 @@ function Stats({ completedRaces }) {
                         improvement = formatSeconds(improvementInSeconds);
                     }
                 }
-                
+
                 distanceStats[distance] = { bestTime: bestRace.time, distance: bestRace.distance, improvement };
             } else if (STANDARD_DISTANCES.includes(distance)) {
                  distanceStats[distance] = { bestTime: 'N/A', distance: null, improvement: null };
             }
         });
-        
+
         for (const distance in racesByDistance) {
             racesByDistance[distance].sort((a, b) => new Date(b.date) - new Date(a.date));
         }
 
-        return { 
-            racesByDistance: Object.entries(racesByDistance).sort((a,b) => b[1].length - a[1].length), 
+        return {
+            racesByDistance: Object.entries(racesByDistance).sort((a,b) => b[1].length - a[1].length),
             distanceStats,
             totalRaces: filteredRaces.length,
             totalMiles: totalMiles.toFixed(2),
@@ -1033,7 +1037,7 @@ function Stats({ completedRaces }) {
     }, [completedRaces, selectedYear]);
 
     if (completedRaces.length === 0) {
-        return null; 
+        return null;
     }
 
     return (
@@ -1044,8 +1048,8 @@ function Stats({ completedRaces }) {
                     <span>Stats</span>
                     <ChevronDown className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} size={24} />
                 </button>
-                <select 
-                    value={selectedYear} 
+                <select
+                    value={selectedYear}
                     onChange={(e) => setSelectedYear(e.target.value)}
                     className="bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit rounded-lg px-4 py-2 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
@@ -1059,14 +1063,14 @@ function Stats({ completedRaces }) {
                     {yearStats.totalRaces > 0 ? (
                         <>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-                                 <div className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center">
+                                <div className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center">
                                     <div className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                                         <Flag size={16} />
                                         <span>Total Races</span>
                                     </div>
                                     <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">{yearStats.totalRaces}</p>
                                 </div>
-                                 <div className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center">
+                                <div className="bg-slate-50 dark:bg-gray-700/50 p-4 rounded-lg text-center">
                                     <div className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                                         <Milestone size={16} />
                                         <span>Total Miles</span>
@@ -1120,7 +1124,7 @@ function Stats({ completedRaces }) {
                                         </div>
                                     ))}
                                 </div>
-                                
+
                                 {/* Right Column: Year Best Grid */}
                                 <div>
                                     <h3 className="font-bold mb-3 text-lg text-center">Best Times in {selectedYear === 'All' ? 'All Time' : selectedYear}</h3>
@@ -1150,7 +1154,7 @@ function Stats({ completedRaces }) {
                                                     )}
                                                 </div>
                                             </div>
-                                        )})}
+                                            )})}
                                     </div>
                                 </div>
                             </div>
@@ -1205,11 +1209,11 @@ function TimeProgressChart({ data }) {
                 >
                     <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
                     <XAxis dataKey="formattedDate" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis 
+                    <YAxis
                         domain={['dataMin - 60', 'dataMax + 60']}
                         allowDecimals={false}
-                        fontSize={12} 
-                        tickLine={false} 
+                        fontSize={12}
+                        tickLine={false}
                         axisLine={false}
                         tickFormatter={(value) => formatSeconds(value)}
                     />
@@ -1226,7 +1230,7 @@ function NewPRModal({ race, onClose }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose();
-    }, 5000); 
+    }, 5000);
     return () => clearTimeout(timer);
   }, [onClose]);
 
@@ -1254,7 +1258,7 @@ function GoalAchievedModal({ race, onClose }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose();
-    }, 5000); 
+    }, 5000);
     return () => clearTimeout(timer);
   }, [onClose]);
 
@@ -1288,9 +1292,9 @@ function ShareModal({ race, type, imageData, imageName, onClose, onShareAsText }
         link.download = imageName;
         link.href = imageData;
         link.click();
-        onClose(); 
+        onClose();
     };
-    
+
     const handleTextShare = () => {
         let shareText = '';
         if (type === 'completed') {
@@ -1298,7 +1302,7 @@ function ShareModal({ race, type, imageData, imageName, onClose, onShareAsText }
         } else { // upcoming
             shareText = `I'm running this race soon!\nRace: ${race.name}\nDistance: ${race.distance}\nGoal Time: ${race.goalTime}\nDate: ${new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' })}`;
         }
-        
+
         const textArea = document.createElement("textarea");
         textArea.value = shareText;
         document.body.appendChild(textArea);
@@ -1338,10 +1342,10 @@ function ShareModal({ race, type, imageData, imageName, onClose, onShareAsText }
 }
 
 function SignUpModal({ onClose, onSwitch }) {
-    const [username, setUsername] = useState('');
+    // Remove the username state, we'll use email for login
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
+    const [email, setEmail] = useState(''); // This will now be the primary identifier
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -1350,34 +1354,35 @@ function SignUpModal({ onClose, onSwitch }) {
         setError('');
         setLoading(true);
 
-        if (!username || !password || !name) {
-            setError("Name, username and password are required.");
+        // All fields are now required
+        if (!email || !password || !name) {
+            setError("Name, email, and password are required.");
             setLoading(false);
             return;
         }
-        
-        const emailForAuth = `${username}@benedictruns.app`;
 
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, emailForAuth, password);
+            // Use the real email to create the user in Firebase Auth
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            // Close the modal as soon as the account is created
-            onClose();
+            onClose(); // Close modal immediately
 
-            // Then, create the profile document in the background
+            // Save the user's display name and email in their Firestore profile
             await setDoc(doc(db, `artifacts/${appId}/users/${user.uid}/profile`, "data"), {
                 name: name,
-                username: username,
-                email: email, 
+                email: email, // Store for display and other purposes
                 createdAt: new Date(),
             });
 
         } catch (authError) {
             if (authError.code === 'auth/email-already-in-use') {
-                setError("Username is already taken. Please choose another one.");
-            } else {
-                setError(authError.message);
+                setError("This email is already in use. Please try another or log in.");
+            } else if (authError.code === 'auth/invalid-email') {
+                setError("Please enter a valid email address.");
+            }
+            else {
+                setError("An error occurred during sign-up. Please try again.");
             }
         } finally {
             setLoading(false);
@@ -1390,10 +1395,10 @@ function SignUpModal({ onClose, onSwitch }) {
                 <h2 className="text-2xl font-bold mb-4 dark:text-slate-100">Create Account</h2>
                 {error && <p className="bg-red-100 text-red-700 p-3 rounded-lg mb-4">{error}</p>}
                 <form onSubmit={handleSignUp} className="space-y-4">
+                    {/* Switch the order to prioritize email */}
                     <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Your Name" required className="w-full bg-slate-100 dark:bg-gray-700 dark:text-white dark:placeholder-slate-400 dark:border-gray-600 p-3 rounded-lg border-slate-300"/>
-                    <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="Username" required className="w-full bg-slate-100 dark:bg-gray-700 dark:text-white dark:placeholder-slate-400 dark:border-gray-600 p-3 rounded-lg border-slate-300"/>
+                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" required className="w-full bg-slate-100 dark:bg-gray-700 dark:text-white dark:placeholder-slate-400 dark:border-gray-600 p-3 rounded-lg border-slate-300"/>
                     <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password (min. 6 characters)" required className="w-full bg-slate-100 dark:bg-gray-700 dark:text-white dark:placeholder-slate-400 dark:border-gray-600 p-3 rounded-lg border-slate-300"/>
-                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email (Optional, for backup)" className="w-full bg-slate-100 dark:bg-gray-700 dark:text-white dark:placeholder-slate-400 dark:border-gray-600 p-3 rounded-lg border-slate-300"/>
                     <div className="flex justify-between items-center gap-4">
                         <button type="submit" disabled={loading} className="w-full bg-indigo-600 text-white p-3 rounded-lg font-bold hover:bg-indigo-700 disabled:bg-indigo-300">{loading ? 'Creating...' : 'Sign Up'}</button>
                         <button type="button" onClick={onClose} className="w-full bg-slate-200 text-slate-700 p-3 rounded-lg font-bold hover:bg-slate-300 dark:bg-gray-600 dark:text-slate-200 dark:hover:bg-gray-500">Cancel</button>
@@ -1408,7 +1413,7 @@ function SignUpModal({ onClose, onSwitch }) {
 }
 
 function LoginModal({ onClose, onSwitch }) {
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState(''); // Changed from username to email
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -1418,17 +1423,16 @@ function LoginModal({ onClose, onSwitch }) {
         setError('');
         setLoading(true);
 
-        const emailForAuth = `${username}@benedictruns.app`;
-
         try {
-            await signInWithEmailAndPassword(auth, emailForAuth, password);
+            // Use the real email and password to sign in
+            await signInWithEmailAndPassword(auth, email, password);
             onClose();
         } catch (authError) {
              switch (authError.code) {
                 case 'auth/user-not-found':
                 case 'auth/wrong-password':
                 case 'auth/invalid-credential':
-                    setError('Invalid username or password.');
+                    setError('Invalid email or password.');
                     break;
                 default:
                     setError('An error occurred. Please try again.');
@@ -1438,14 +1442,15 @@ function LoginModal({ onClose, onSwitch }) {
             setLoading(false);
         }
     };
-    
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-md m-4">
                 <h2 className="text-2xl font-bold mb-4 dark:text-slate-100">Log In</h2>
                 {error && <p className="bg-red-100 text-red-700 p-3 rounded-lg mb-4">{error}</p>}
                 <form onSubmit={handleLogin} className="space-y-4">
-                    <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="Username" required className="w-full bg-slate-100 dark:bg-gray-700 dark:text-white dark:placeholder-slate-400 dark:border-gray-600 p-3 rounded-lg border-slate-300"/>
+                    {/* This input now accepts an email address */}
+                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" required className="w-full bg-slate-100 dark:bg-gray-700 dark:text-white dark:placeholder-slate-400 dark:border-gray-600 p-3 rounded-lg border-slate-300"/>
                     <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required className="w-full bg-slate-100 dark:bg-gray-700 dark:text-white dark:placeholder-slate-400 dark:border-gray-600 p-3 rounded-lg border-slate-300"/>
                     <div className="flex justify-between items-center gap-4">
                          <button type="submit" disabled={loading} className="w-full bg-indigo-600 text-white p-3 rounded-lg font-bold hover:bg-indigo-700 disabled:bg-indigo-300">{loading ? 'Logging in...' : 'Log In'}</button>
