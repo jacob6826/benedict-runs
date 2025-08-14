@@ -28,18 +28,23 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { Clock, Flag, Plus, Trash2, Edit, Save, X, Target, Info, Calendar, Link as LinkIcon, User, LogOut, Award, Download, CheckSquare, Share2, ClipboardCopy, Moon, Sun, Gauge, BarChart2, ChevronDown, Milestone, TrendingDown, PartyPopper } from 'lucide-react';
 
 // --- Firebase Configuration ---
-const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID,
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
-};
+// Use the firebaseConfig provided by the environment, with fallback placeholders
+const firebaseConfig = typeof __firebase_config !== 'undefined'
+    ? JSON.parse(__firebase_config)
+    : {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID",
+        measurementId: "YOUR_MEASUREMENT_ID"
+      };
 
 // --- App ID ---
-const appId = 'benedict-runs-default';
+// Use the appId provided by the environment, with a fallback
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'benedict-runs-default';
+
 
 // --- Initialize Firebase ---
 const app = initializeApp(firebaseConfig);
@@ -222,6 +227,10 @@ export default function App() {
     const [newRaceNotes, setNewRaceNotes] = useState('');
     const [newRaceDistance, setNewRaceDistance] = useState('5k');
     const [showCustomHistoryDistance, setShowCustomHistoryDistance] = useState(false);
+    const [editingHistoryRaceId, setEditingHistoryRaceId] = useState(null);
+    const [editingHistoryRaceData, setEditingHistoryRaceData] = useState(null);
+    const [showCustomEditHistoryDistance, setShowCustomEditHistoryDistance] = useState(false);
+
 
     // Upcoming Races State
     const [upcomingRaces, setUpcomingRaces] = useState([]);
@@ -242,6 +251,11 @@ export default function App() {
         return () => {
             document.body.removeChild(script);
         };
+    }, []);
+
+    // --- Set Document Title Effect ---
+    useEffect(() => {
+        document.title = "Benedict Runs";
     }, []);
 
     // --- Authentication Effect ---
@@ -523,6 +537,26 @@ export default function App() {
                 showAndHideNotification("Error adding upcoming race.");
             });
     };
+    
+    // --- Edit Handlers for History ---
+    const handleStartEditHistoryRace = (race) => {
+        setEditingHistoryRaceId(race.id);
+        setEditingHistoryRaceData(race);
+        setShowCustomEditHistoryDistance(!STANDARD_DISTANCES.includes(race.distance));
+    };
+
+    const handleSaveHistoryRace = async (id) => {
+        try {
+            await updateDoc(doc(db, `artifacts/${appId}/users/${currentUser.uid}/completedRaces`, id), editingHistoryRaceData);
+            setEditingHistoryRaceId(null);
+            setEditingHistoryRaceData(null);
+            showAndHideNotification("Race updated successfully!");
+        } catch(error){
+            console.error("Error updating completed race:", error);
+            showAndHideNotification("Error updating race.");
+        }
+    };
+
 
     const handleStartEditUpcomingRace = (race) => {
         setEditingUpcomingRaceId(race.id);
@@ -735,30 +769,75 @@ export default function App() {
                                     <div className="space-y-3 max-h-[32rem] overflow-y-auto pr-2">
                                        {completedRaces.length > 0 ? completedRaces.map(race => {
                                            const isPR = personalRecords[race.distance]?.id === race.id;
+                                           const isEditing = editingHistoryRaceId === race.id;
                                            return (
-                                            <div id={`completed-card-${race.id}`} key={race.id} className="bg-slate-50 dark:bg-gray-700/50 border border-slate-200 dark:border-gray-700 p-4 rounded-lg flex justify-between items-center transition-all hover:shadow-md dark:hover:border-gray-600">
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2">
-                                                        {isPR && <Award className="text-amber-500 flex-shrink-0" size={18} />}
-                                                        <p className="font-semibold text-slate-700 dark:text-slate-200 truncate">{race.name}</p>
+                                            <div id={`completed-card-${race.id}`} key={race.id} className="bg-slate-50 dark:bg-gray-700/50 border border-slate-200 dark:border-gray-700 p-4 rounded-lg transition-all hover:shadow-md dark:hover:border-gray-600">
+                                                {isEditing ? (
+                                                    <div className="space-y-3">
+                                                        <input type="text" value={editingHistoryRaceData.name} onChange={(e) => setEditingHistoryRaceData({...editingHistoryRaceData, name: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                                        <div className="grid grid-cols-6 gap-4">
+                                                            <div className={`col-span-2 grid gap-4 ${showCustomEditHistoryDistance ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                                                                <select value={showCustomEditHistoryDistance ? 'Custom' : editingHistoryRaceData.distance}
+                                                                    onChange={e => {
+                                                                        const val = e.target.value;
+                                                                        setShowCustomEditHistoryDistance(val === 'Custom');
+                                                                        setEditingHistoryRaceData({...editingHistoryRaceData, distance: val === 'Custom' ? '' : val});
+                                                                    }}
+                                                                    className="w-full appearance-none bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                                                    {STANDARD_DISTANCES.map(d => <option key={d} value={d}>{d}</option>)}
+                                                                    <option value="Custom">Custom</option>
+                                                                </select>
+                                                                {showCustomEditHistoryDistance && <input type="text" value={editingHistoryRaceData.distance} onChange={e => setEditingHistoryRaceData({...editingHistoryRaceData, distance: e.target.value})} placeholder="Custom" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>}
+                                                            </div>
+                                                            <div className="col-span-2">
+                                                                <input type="text" value={editingHistoryRaceData.time} onChange={(e) => setEditingHistoryRaceData({...editingHistoryRaceData, time: e.target.value})} placeholder="Time" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                                            </div>
+                                                            <div className="relative col-span-2">
+                                                                <input
+                                                                    type="date"
+                                                                    value={editingHistoryRaceData.date}
+                                                                    onChange={(e) => setEditingHistoryRaceData({...editingHistoryRaceData, date: e.target.value})}
+                                                                    className={`w-full appearance-none bg-slate-100 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!editingHistoryRaceData.date ? 'text-slate-400' : 'text-inherit'}`}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="relative">
+                                                            <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
+                                                            <input type="url" placeholder="Race Website Link (Optional)" value={editingHistoryRaceData.link} onChange={(e) => setEditingHistoryRaceData({...editingHistoryRaceData, link: e.target.value})} className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-10"/>
+                                                        </div>
+                                                        <textarea value={editingHistoryRaceData.notes} onChange={(e) => setEditingHistoryRaceData({...editingHistoryRaceData, notes: e.target.value})} placeholder="Notes" className="w-full bg-slate-100 dark:bg-gray-700 dark:border-gray-600 text-inherit placeholder-slate-400 rounded-lg px-4 py-2.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 h-20 resize-none"/>
+                                                        <div className="flex justify-end gap-2">
+                                                            <button onClick={() => handleSaveHistoryRace(race.id)} className="p-2 rounded-full text-white bg-green-500 hover:bg-green-600"><Save size={18}/></button>
+                                                            <button onClick={() => setEditingHistoryRaceId(null)} className="p-2 rounded-full text-slate-600 bg-slate-200 hover:bg-slate-300"><X size={18}/></button>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm">
-                                                        <p className="text-slate-500 dark:text-slate-400 flex items-center"><Flag size={14} className="mr-1.5"/>{race.distance || 'N/A'}</p>
-                                                        <p className="text-indigo-600 dark:text-indigo-400 font-medium flex items-center"><Clock size={14} className="mr-1.5" />{race.time}</p>
-                                                        <p className="text-slate-500 dark:text-slate-400 flex items-center"><Gauge size={14} className="mr-1.5"/>{formatPace(race.time, race.distance)}/mi</p>
-                                                        <p className="text-slate-500 dark:text-slate-400 flex items-center"><Calendar size={14} className="mr-1.5"/>{race.date ? new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : 'No Date'}</p>
+                                                ) : (
+                                                    <div className="flex justify-between items-center">
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center gap-2">
+                                                                {isPR && <Award className="text-amber-500 flex-shrink-0" size={18} />}
+                                                                <p className="font-semibold text-slate-700 dark:text-slate-200 truncate">{race.name}</p>
+                                                            </div>
+                                                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm">
+                                                                <p className="text-slate-500 dark:text-slate-400 flex items-center"><Flag size={14} className="mr-1.5"/>{race.distance || 'N/A'}</p>
+                                                                <p className="text-indigo-600 dark:text-indigo-400 font-medium flex items-center"><Clock size={14} className="mr-1.5" />{race.time}</p>
+                                                                <p className="text-slate-500 dark:text-slate-400 flex items-center"><Gauge size={14} className="mr-1.5"/>{formatPace(race.time, race.distance)}/mi</p>
+                                                                <p className="text-slate-500 dark:text-slate-400 flex items-center"><Calendar size={14} className="mr-1.5"/>{race.date ? new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : 'No Date'}</p>
+                                                            </div>
+                                                            {race.notes && (
+                                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 pt-2 border-t border-slate-200 dark:border-gray-600">
+                                                                    {race.notes}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                                                            <button onClick={() => handleInitiateShare(race, 'completed')} className="text-slate-400 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-gray-600"><Share2 size={18}/></button>
+                                                            {race.link && <a href={race.link} target="_blank" rel="noopener noreferrer" className="text-slate-400 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-gray-600" aria-label="Race Website"><LinkIcon size={18}/></a>}
+                                                            <button onClick={() => handleStartEditHistoryRace(race)} className="text-slate-400 dark:text-slate-400 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors p-2 rounded-full hover:bg-yellow-50 dark:hover:bg-yellow-500/20"><Edit size={18}/></button>
+                                                            <button onClick={() => handleDeleteRace(race.id, 'completedRaces')} className="text-slate-400 dark:text-slate-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-500/20" aria-label="Delete race"><Trash2 size={18}/></button>
+                                                        </div>
                                                     </div>
-                                                    {race.notes && (
-                                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 pt-2 border-t border-slate-200 dark:border-gray-600">
-                                                            {race.notes}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                                <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                                                    <button onClick={() => handleInitiateShare(race, 'completed')} className="text-slate-400 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-gray-600"><Share2 size={18}/></button>
-                                                    {race.link && <a href={race.link} target="_blank" rel="noopener noreferrer" className="text-slate-400 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-gray-600" aria-label="Race Website"><LinkIcon size={18}/></a>}
-                                                    <button onClick={() => handleDeleteRace(race.id, 'completedRaces')} className="text-slate-400 dark:text-slate-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-500/20" aria-label="Delete race"><Trash2 size={18}/></button>
-                                                </div>
+                                                )}
                                             </div>
                                            )}) : <p className="text-slate-400 dark:text-slate-500 text-center py-8">No completed races yet.</p>}
                                     </div>
