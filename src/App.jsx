@@ -251,9 +251,23 @@ export default function App() {
         };
     }, []);
 
-    // --- Set Document Title Effect ---
+    // --- Set Document Title and Favicon Effect ---
     useEffect(() => {
+        // Set the document title
         document.title = "Benedict Runs";
+
+        // Find the existing favicon link element
+        let favicon = document.querySelector("link[rel*='icon']");
+
+        // If it doesn't exist, create one
+        if (!favicon) {
+            favicon = document.createElement('link');
+            favicon.rel = 'icon';
+            document.getElementsByTagName('head')[0].appendChild(favicon);
+        }
+
+        // Set the href to the new logo path
+        favicon.href = '/logo.jpg';
     }, []);
 
     // --- Authentication Effect ---
